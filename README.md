@@ -22,7 +22,6 @@ Please copy your local Community library files to the **References** folder.
 
 - [Installing Web files](#installing-web-files)
 - [Installing SQL files](#installing-sql-files)
-- [Enabling Telligent Event Calendar plugin](#enabling-telligent-event-calendar-plugin)
 - [Installing tasks and search](#installing-tasks-and-search)
 
 #### Installing Web files
