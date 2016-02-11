@@ -1,0 +1,324 @@
+﻿using System;
+using System.Collections.Generic;
+using System.IdentityModel.Services;
+using System.IdentityModel.Tokens;
+using System.IO;
+using System.IO.Compression;
+using System.Linq;
+using System.Security.Claims;
+using System.Security.Cryptography;
+using System.Security.Cryptography.X509Certificates;
+using System.Security.Cryptography.Xml;
+using System.ServiceModel;
+using System.Text;
+using System.Threading.Tasks;
+using System.Web;
+using System.Xml;
+using Telligent.Evolution.Extensibility.Api.Version1;
+using Telligent.Evolution.Extensibility.Security.Version1;
+using Telligent.Evolution.Extensibility.Version1;
+
+namespace Telligent.Services.SamlAuthenticationPlugin.Components
+{
+    public class SamlAuthnHandler : IHttpHandler
+
+    {
+        private const string SamlRequestTemplate = "<samlp:AuthnRequest ID=\"{0}\" Version=\"2.0\" IssueInstant=\"{1}\" Destination=\"{2}\" Consent=\"urn:oasis:names:tc:SAML:2.0:consent:unspecified\" xmlns:samlp=\"urn:oasis:names:tc:SAML:2.0:protocol\"><saml:Issuer xmlns:saml=\"urn:oasis:names:tc:SAML:2.0:assertion\">{3}</saml:Issuer><samlp:NameIDPolicy AllowCreate=\"true\" /></samlp:AuthnRequest>";
+        //note old code had this in place of "Consent" ForceAuthn="false" IsPassive="false" ProtocolBinding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST" AssertionConsumerServiceURL="{url that accepts saml tokens}"
+
+        private const string SamlHandlerContent = "<html><head><title>Working...</title></head><body><form method='POST' name='hiddenform' action='{0}'><input type='hidden' name='SAMLRequest' value='{1}' /><noscript><p>Script is disabled. Click Submit to continue.</p><input type='submit' value='Submit' /></noscript></form><script language='javascript'>window.setTimeout('document.forms[0].submit()', 0);</script></body></html>";
+
+
+        #region IHttpHandler Members
+
+        public bool IsReusable { get { return true; } }
+
+        public void ProcessRequest(HttpContext context)
+        {
+
+            string returnUrl = "/";
+            
+            //protect against no httpcontext or cs context
+            try
+            {
+                //exclude logout and register urls from setting the return url
+                //grab the invitation key
+                Guid? invitationKey = null;
+                Guid parsedInvitationKey;
+                //add user invitation guid if present...
+                var i = SamlHelpers.GetInvitationKey();
+                if (i != null)
+                {
+                    if (Guid.TryParse(i, out parsedInvitationKey))
+                        invitationKey = parsedInvitationKey;
+                }
+                //note we still have the case where the invitation may be in the return url
+
+                var returnUrlParam = context.Request.QueryString[SamlHelpers.ReturnUrlParameterName];
+                if (IsValidReturnUrl(returnUrlParam)) //ignores pages like logout or register or errors
+                {
+                    returnUrl = context.Request[SamlHelpers.ReturnUrlParameterName];
+                    //if there is more than one return url, just use the first
+                    returnUrl = returnUrl.Split(',')[0];
+                }
+                SamlHelpers.SetCookieReturnUrl(returnUrl, invitationKey);
+            }
+            catch (Exception ex)
+            {
+                PublicApi.Eventlogs.Write("Error Creating SAML return URL cookie:" + ex.ToString(), new EventLogEntryWriteOptions(){ Category= "SAML", EventType= "Error", EventId = 1000});
+            }
+
+
+            var samlPlugin = PluginManager.GetSingleton<SamlOAuthClient>();
+            if (samlPlugin == null)
+                throw new InvalidOperationException("Unable to load the SamlAuthentication plugin; saml logins are not supported in the current configuration");
+
+            var requestId = "_" + Guid.NewGuid().ToString();
+            var issuerUrl = PublicApi.Url.Absolute(PublicApi.CoreUrls.Home());
+
+
+            if (samlPlugin.IdpBindingType == SamlBinding.SAML11_POST && samlPlugin.IdpAuthRequestType != AuthnBinding.IDP_Initiated)
+                throw new NotSupportedException("Only bare get requests (without querystring or signature) are supported by the SAML 11 AuthN handler at this time");
+
+
+            switch(samlPlugin.IdpAuthRequestType)
+            {
+                case AuthnBinding.IDP_Initiated:
+                    context.Response.Redirect(samlPlugin.IdpUrl, false);
+                    HttpContext.Current.ApplicationInstance.CompleteRequest();
+                    break;
+
+                case AuthnBinding.Redirect: //untested
+                    context.Response.Redirect(samlPlugin.IdpUrl + "?SAMLRequest=" + System.Text.Encoding.Default.GetString(ZipStr(GetSamlAuthnBase64(requestId, samlPlugin.IdpUrl, issuerUrl))) + "&RelayState=" + HttpUtility.UrlEncode("/SamlLogin?ReturnUrl=" + returnUrl), false);
+                    HttpContext.Current.ApplicationInstance.CompleteRequest();
+                    break;
+
+                case AuthnBinding.SignedRedirect:
+                    var redirectThumbprint = samlPlugin.AuthNCertThumbrint;
+
+                    if (string.IsNullOrEmpty(redirectThumbprint))
+                        throw new ArgumentNullException("Invalid configuration, the SAML Plugin is set to sign AuthN requests, but no certificate thumbprint is configured", "samlPlugin.AuthNCertThumbrint");
+                    
+                    throw new NotImplementedException();
+                    //break;
+
+                case AuthnBinding.POST:
+                    var authXML = GetSamlAuthnXml(requestId, samlPlugin.IdpUrl, issuerUrl);
+                    ValidateXML(authXML);
+                    POSTAuthNRequest(samlPlugin.IdpUrl, authXML);
+                    break;
+
+                case AuthnBinding.SignedPOST:
+                    var postThumbprint = samlPlugin.AuthNCertThumbrint;
+
+                    if (string.IsNullOrEmpty(postThumbprint))
+                        throw new ArgumentNullException("Invalid configuration, the SAML Plugin is set to sign AuthN requests, but no certificate thumbprint is configured", "samlPlugin.AuthNCertThumbrint");
+
+
+                    var signedAuthXML = GetSamlAuthnXml(requestId, samlPlugin.IdpUrl, issuerUrl, postThumbprint);
+                    ValidateXML(signedAuthXML);
+                    POSTAuthNRequest(samlPlugin.IdpUrl, signedAuthXML);
+                    break;
+
+            }
+
+
+
+
+
+
+
+        }
+
+        private void ValidateXML(string authNXml)
+        {
+            XmlDocument xmlDoc = new XmlDocument();
+            xmlDoc.PreserveWhitespace = true;
+            xmlDoc.LoadXml(authNXml);
+
+            var signatureNode = xmlDoc.SelectSingleNode("//*[local-name()='Signature']");
+            if (signatureNode != null)
+            {
+                //check the attribute of the SignatureMethod node if present, should have a property called Algorithm
+                //<ds:SignatureMethod Algorithm="http://www.w3.org/2000/09/xmldsig#rsa-sha1"/>
+
+                var signatureMethodNode = xmlDoc.SelectSingleNode("//*[local-name()='SignatureMethod']");
+                if (signatureMethodNode.Attributes["Algorithm"] == null)
+                    throw new NullReferenceException("The XML AuthN signature did not contain a valid SignatureMethod node");
+            }
+        }
+
+
+        #endregion
+
+        #region Helpers
+
+
+
+        private string GetSamlAuthnXml(string requestId, string _identityProviderUrl, string _issuerUrl, string thumbprint = null)
+        {
+            var authNXml = string.Format(
+                    SamlRequestTemplate,
+                    requestId,
+                    DateTime.Now.ToString("yyyy-MM-ddTHH:mm:ss"), //DateTime.UtcNow.ToString("yyyy-MM-ddTHH:MM:ss.fffZ"),
+                    _identityProviderUrl,
+                    _issuerUrl);
+
+            if(!string.IsNullOrEmpty(thumbprint))
+            {
+                var cert = GetSigningKey(thumbprint);
+
+                authNXml = SignAuthN(authNXml, requestId, cert);
+            }
+
+            return authNXml;
+        }
+
+        private void POSTAuthNRequest(string idpUrl, string authXML)
+        {
+            // Redirect the request to the SAML STS
+            string finalisedRedirectString = string.Format(
+                SamlHandlerContent,
+                idpUrl,
+                ToBase64(authXML));
+
+            HttpContext.Current.Response.Write(finalisedRedirectString);
+            HttpContext.Current.ApplicationInstance.CompleteRequest();
+        }
+
+        private string GetSamlAuthnBase64(string requestId, string _identityProviderUrl, string _issuerUrl, string thumbprint = null)
+        {
+            return System.Convert.ToBase64String(
+                System.Text.Encoding.UTF8.GetBytes(GetSamlAuthnXml(requestId, _identityProviderUrl, _issuerUrl, thumbprint)));
+        }
+
+        private string ToBase64(string xml)
+        {
+            return System.Convert.ToBase64String(
+                System.Text.Encoding.UTF8.GetBytes(xml));
+        }
+
+        public static byte[] ZipStr(String str)
+        {
+            using (MemoryStream output = new MemoryStream())
+            {
+                using (DeflateStream gzip =
+                  new DeflateStream(output, CompressionMode.Compress))
+                {
+                    using (StreamWriter writer =
+                      new StreamWriter(gzip, System.Text.Encoding.UTF8))
+                    {
+                        writer.Write(str);
+                    }
+                }
+
+                return output.ToArray();
+            }
+        }
+
+        public static string UnZipStr(byte[] input)
+        {
+            using (MemoryStream inputStream = new MemoryStream(input))
+            {
+                using (DeflateStream gzip =
+                  new DeflateStream(inputStream, CompressionMode.Decompress))
+                {
+                    using (StreamReader reader =
+                      new StreamReader(gzip, System.Text.Encoding.UTF8))
+                    {
+                        return reader.ReadToEnd();
+                    }
+                }
+            }
+        }
+
+        private X509Certificate2 GetSigningKey(string thumbprint)
+        {
+            X509Store store = new X509Store("MY", StoreLocation.LocalMachine);
+            store.Open(OpenFlags.ReadOnly | OpenFlags.OpenExistingOnly);
+
+            X509Certificate2Collection collection = (X509Certificate2Collection)store.Certificates;
+            if (collection.Count < 1)
+                throw new ArgumentException("Unable to locate any certificates in MY store on the local machine; unable to sign authnrequest", "thumbprint");
+
+            X509Certificate2Collection fcollection = (X509Certificate2Collection)collection.Find(X509FindType.FindByThumbprint, thumbprint, false);
+
+            if (fcollection.Count < 1)
+                throw new ArgumentException(string.Format("Unable to locate certificate in MY store (local mahcine account) based on the thumbprint '{0}'; unable to sign authnrequest", thumbprint), "thumbprint");
+
+            return fcollection[0];
+
+        }
+
+        private string SignAuthN(string authNXml, string requestId, X509Certificate2 requestSigningCert)
+        {
+            if (string.IsNullOrEmpty(authNXml))
+                throw new ArgumentNullException("authNXml");
+
+            XmlDocument xmlDoc = new XmlDocument();
+            xmlDoc.PreserveWhitespace = true;
+            xmlDoc.LoadXml(authNXml);
+            
+            SignedXml signedXml = new SignedXml(xmlDoc);
+
+            KeyInfo keyInfo = new KeyInfo();
+
+            keyInfo.AddClause(new KeyInfoX509Data(requestSigningCert));
+
+            signedXml.KeyInfo = keyInfo;
+
+            signedXml.SignedInfo.CanonicalizationMethod = SignedXml.XmlDsigExcC14NTransformUrl;
+
+            RSACryptoServiceProvider rsaKey = (RSACryptoServiceProvider)requestSigningCert.PrivateKey;
+
+            signedXml.SigningKey = rsaKey;
+
+            // Create a reference to be signed.
+            Reference reference = new Reference();
+            reference.Uri = "#" + requestId;
+
+            XmlDsigEnvelopedSignatureTransform env = new XmlDsigEnvelopedSignatureTransform();
+            reference.AddTransform(env);
+
+            XmlDsigExcC14NTransform c16n = new XmlDsigExcC14NTransform();
+            c16n.InclusiveNamespacesPrefixList = "#default samlp saml ds xs xsi";
+            reference.AddTransform(c16n);
+
+            signedXml.AddReference(reference);
+
+            signedXml.ComputeSignature();
+
+            XmlElement xmlDigitalSignature = signedXml.GetXml();
+
+            xmlDoc.DocumentElement.InsertAfter(xmlDoc.ImportNode(xmlDigitalSignature, true), xmlDoc.DocumentElement.FirstChild);  //signature to be second node after saml:Issuer
+
+            return xmlDoc.OuterXml;
+        }
+
+        private bool IsValidReturnUrl(string returnUrl)
+        {
+            if (!string.IsNullOrEmpty(returnUrl)
+                && !(
+                        returnUrl.IndexOf("MessageID") != -1
+                        || returnUrl.IndexOf(PublicApi.CoreUrls.Banned()) != -1
+                        || returnUrl.IndexOf(PublicApi.CoreUrls.NotFound()) != -1
+                        || returnUrl.IndexOf("changepassword") != -1
+                        || returnUrl.IndexOf("emailforgottenpassword") != -1
+                        || returnUrl.IndexOf("/samlauthn") != -1
+                        || returnUrl.IndexOf("/samlresponse") != -1
+                        || returnUrl.IndexOf("/oauth") != -1
+                        || returnUrl.IndexOf("/login") != -1
+                        || returnUrl.IndexOf("/logout") != -1
+                        || returnUrl.IndexOf("/samllogout") != -1
+                    )
+                )
+                return true;
+
+            return false;
+
+        }
+
+
+        #endregion
+    }
+}

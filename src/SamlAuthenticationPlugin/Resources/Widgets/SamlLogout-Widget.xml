@@ -1,0 +1,2 @@
+<scriptedContentFragments><scriptedContentFragment name="Saml Logout" version="8.0.4.41029" description="Silent logout added for SAML use cases" instanceIdentifier="31728beb334e420e84200cc6f81d109c" theme="" isCacheable="false" varyCacheByUser="false" showHeaderByDefault="true" cssClass=""><contentScript>#set($stringResponse = $core_v2_authentication.Logout())
+$stringResponse</contentScript></scriptedContentFragment></scriptedContentFragments>

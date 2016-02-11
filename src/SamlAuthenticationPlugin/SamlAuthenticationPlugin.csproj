@@ -1,0 +1,182 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProductVersion>9.0.30729</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{C6179562-30DF-4C81-AB43-30712575B21C}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>Telligent.Services.SamlAuthenticationPlugin</RootNamespace>
+    <AssemblyName>Telligent.Services.SamlAuthenticationPlugin</AssemblyName>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <FileUpgradeFlags>
+    </FileUpgradeFlags>
+    <OldToolsVersion>3.5</OldToolsVersion>
+    <UpgradeBackupLocation />
+    <TargetFrameworkProfile />
+    <PublishUrl>publish\</PublishUrl>
+    <Install>true</Install>
+    <InstallFrom>Disk</InstallFrom>
+    <UpdateEnabled>false</UpdateEnabled>
+    <UpdateMode>Foreground</UpdateMode>
+    <UpdateInterval>7</UpdateInterval>
+    <UpdateIntervalUnits>Days</UpdateIntervalUnits>
+    <UpdatePeriodically>false</UpdatePeriodically>
+    <UpdateRequired>false</UpdateRequired>
+    <MapFileExtensions>true</MapFileExtensions>
+    <ApplicationRevision>0</ApplicationRevision>
+    <ApplicationVersion>1.0.0.%2a</ApplicationVersion>
+    <IsWebBootstrapper>false</IsWebBootstrapper>
+    <UseApplicationTrust>false</UseApplicationTrust>
+    <BootstrapperEnabled>true</BootstrapperEnabled>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
+    <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
+    <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.configuration" />
+    <Reference Include="System.Core">
+      <RequiredTargetFramework>3.5</RequiredTargetFramework>
+    </Reference>
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.IdentityModel">
+      <RequiredTargetFramework>3.0</RequiredTargetFramework>
+    </Reference>
+    <Reference Include="System.IdentityModel.Selectors">
+      <RequiredTargetFramework>3.0</RequiredTargetFramework>
+    </Reference>
+    <Reference Include="System.identitymodel.services" />
+    <Reference Include="System.Runtime.Serialization">
+      <RequiredTargetFramework>3.0</RequiredTargetFramework>
+    </Reference>
+    <Reference Include="System.Security" />
+    <Reference Include="System.ServiceModel" />
+    <Reference Include="System.Web" />
+    <Reference Include="System.Web.ApplicationServices" />
+    <Reference Include="System.Xml.Linq">
+      <RequiredTargetFramework>3.5</RequiredTargetFramework>
+    </Reference>
+    <Reference Include="System.Data.DataSetExtensions">
+      <RequiredTargetFramework>3.5</RequiredTargetFramework>
+    </Reference>
+    <Reference Include="System.Data" />
+    <Reference Include="System.Xml" />
+    <Reference Include="Telligent.Common">
+      <HintPath>..\References\Telligent.Common.dll</HintPath>
+    </Reference>
+    <Reference Include="Telligent.DynamicConfiguration">
+      <HintPath>..\References\Telligent.DynamicConfiguration.dll</HintPath>
+    </Reference>
+    <Reference Include="Telligent.Evolution.Api, Version=8.5.1.43931, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\References\Telligent.Evolution.Api.dll</HintPath>
+    </Reference>
+    <Reference Include="Telligent.Evolution.Components">
+      <HintPath>..\References\Telligent.Evolution.Components.dll</HintPath>
+    </Reference>
+    <Reference Include="Telligent.Evolution.Controls">
+      <HintPath>..\References\Telligent.Evolution.Controls.dll</HintPath>
+    </Reference>
+    <Reference Include="Telligent.Evolution.Core, Version=8.5.1.43931, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\References\Telligent.Evolution.Core.dll</HintPath>
+    </Reference>
+    <Reference Include="Telligent.Evolution.ScriptedContentFragments, Version=8.5.1.43931, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\References\Telligent.Evolution.ScriptedContentFragments.dll</HintPath>
+    </Reference>
+    <Reference Include="Telligent.Evolution.SecurityModules">
+      <HintPath>..\References\Telligent.Evolution.SecurityModules.dll</HintPath>
+    </Reference>
+    <Reference Include="Telligent.Evolution.VelocityExtensions">
+      <HintPath>..\References\Telligent.Evolution.VelocityExtensions.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="..\SolutionInfo.cs">
+      <Link>Properties\SolutionInfo.cs</Link>
+    </Compile>
+    <Compile Include="Components\AuthnBinding.cs" />
+    <Compile Include="Components\CleanThumbprintRule.cs" />
+    <Compile Include="Components\CodeBasedIssuerNameRegistry.cs" />
+    <Compile Include="Components\EmbeddedResources.cs" />
+    <Compile Include="Components\LogoutUrlBehavior.cs" />
+    <Compile Include="Components\RequestTypeHandlerMethodConstraint.cs" />
+    <Compile Include="Components\SamlResponseHandler.cs" />
+    <Compile Include="Components\SubjectRecipientValidationMode.cs" />
+    <Compile Include="Components\SamlAuthnHandler.cs" />
+    <Compile Include="Components\SamlBinding.cs" />
+    <Compile Include="Components\SubjectConfirmationDataSaml2SecurityTokenHandler.cs" />
+    <Compile Include="Components\SamlAttribute.cs" />
+    <Compile Include="Components\SamlTokenData.cs" />
+    <Compile Include="Components\TokenProcessor.cs" />
+    <Compile Include="SamlOAuthClient.cs" />
+    <Compile Include="SamlDisplayNameGenerator.cs" />
+    <Compile Include="Extensibility\ISamlUserLookup.cs" />
+    <Compile Include="Extensibility\ISamlTokenDataValidator.cs" />
+    <Compile Include="Extensibility\ISamlDisplayNameGenerator.cs" />
+    <Compile Include="Extensibility\ISamlUsernameGenerator.cs" />
+    <Compile Include="SamlHelpers.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="SqlData.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <BootstrapperPackage Include="Microsoft.Net.Client.3.5">
+      <Visible>False</Visible>
+      <ProductName>.NET Framework 3.5 SP1 Client Profile</ProductName>
+      <Install>false</Install>
+    </BootstrapperPackage>
+    <BootstrapperPackage Include="Microsoft.Net.Framework.3.5.SP1">
+      <Visible>False</Visible>
+      <ProductName>.NET Framework 3.5 SP1</ProductName>
+      <Install>true</Install>
+    </BootstrapperPackage>
+    <BootstrapperPackage Include="Microsoft.Windows.Installer.3.1">
+      <Visible>False</Visible>
+      <ProductName>Windows Installer 3.1</ProductName>
+      <Install>true</Install>
+    </BootstrapperPackage>
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Resources\Images\saml.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Resources\Pages\SamlLogout-Social-Site-Page.xml">
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\Widgets\SamlLoginAutoSelect-Widget.xml" />
+    <EmbeddedResource Include="Resources\Widgets\SamlLogout-Widget.xml">
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>
