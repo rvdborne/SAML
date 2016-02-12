@@ -22,7 +22,7 @@ Please copy your local Community library files to the **References** folder.
 
 - [Installing Web files](#installing-web-files)
 - [Installing SQL files](#installing-sql-files)
-- [Installing tasks and search](#installing-tasks-and-search)
+- [Installing tasks](#installing-tasks)
 
 #### Installing Web files
 
@@ -41,19 +41,19 @@ If you are required to manually run the sql schema updates, be sure to use a ver
 #### Enabling SAML plugin
 
 1. Go to the Web site's Control Panel page. Browse to the Manage Plugins page (**System Administration > Site Administration > Site Configuration > Manage Plugins**).
-2. Place a check mark next to the **Telligent Connect for Salesforce** plugin, and click **Save**.
+2. Place a check mark next to the **SAML Authentication OAuth Client** plugin, and click **Save**.
 3. Click Configure.  
 
-[TODO Configuration Information]
+[//]: # (TODO Configuration Information)
 
 > Enabling the "SAML Authentication OAuth Client" plugin updates the database schema (if required) and adds the SAML Authentication OAuth Client widgets to site’s pages and Adds the SAML Authentication OAuth Client Widgets to the site. Server and/or browser caching may prevent these changes from being seen immediately. After enabling the plugin, restarting the Web site and/or clearing the browser cache should make the SAML Authentication OAuth Client functionality appear immediately.
 
 #### Installing tasks
 
-1. Locate the *Tasks* folder in the Telligent Connect for Salesforce installation package and merge the contents of the tasks.config.salesforce file into the tasks.config file in your job scheduler installation.
-2. You will also need to copy the following files from the installation package to their respective places in the installation directory or the Job Scheduler service:(note: * means all, e.g., *.dll means all files with the extension of .dll)
+1. Stop your Job Scheduler Service.
+2. You will need to copy the following files from the installation package to their respective places in the installation directory or the Job Scheduler service:(note: * means all, e.g., *.dll means all files with the extension of .dll)
   - Copy **Web/bin/&#42;.dll** to the root of the Job Scheduler installation (same location as the .exefile).
-   - Copy all files and folders from Web/Languages to the same folder in the Job Scheduler installation.
+  - Copy all files and folders from Web/Languages to the same folder in the Job Scheduler installation.
 3. Restart your Job Scheduler Service.
 
 
