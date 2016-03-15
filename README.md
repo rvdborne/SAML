@@ -16,7 +16,7 @@ Please copy your local Community library files to the **References** folder.
 - Telligent.Evolution.SecurityModules.dll
 - Telligent.Evolution.VelocityExtensions.dll
 
-### Install and configure Telligent Connect for Salesforce
+### Install and configure the Telligent SAML Authentication Plugin
 
 #### In this Article
 
