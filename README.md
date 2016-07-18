@@ -5,30 +5,29 @@ Version 3.0 compatible with Telligent Community 7.x and Up
 #### What is the SAML Authentication Plugin
 
 This plugin allows your community to receive a SAML tokens via HTTP POST at a new endpoint / route ( ~/samlresponse ).
-will receive and unpackage the SAML token and repackages it in a way compatabile with the out of the box IOAuthClient extensibilty features.  It supports 
-SAML 1.1 HTTP POST and SAML 2.0 HTTP POST bindings.  Additionally the code currently supports the following AuthN request schemes:  IDP Initiated, Redirect, HTTP Post, Signed Redirect, and Signed POST. 
-The plugin also has several options for handling logout scenarios.
+will receive, validate and unpackage the SAML token and repackages it in a way compatible with the out of the box IOAuthClient extensibility features.  It supports 
+SAML 1.1 HTTP POST and SAML 2.0 HTTP POST bindings, configurable AuthN request scenarios, has several options for handling logout scenarios.
 
 SAML Binding Support
 - SAML 1.1 HTTP POST
 - SAML 2.0 HTTP Post
 
-SAML AutnH support
-- IDP Intiated
+SAML AuthN support
+- IDP Initiated
 - Redirect (with optional XML signature)
 - HTTP POST (with optional XML signature)
 
 Logout
-- Internal (local forms authentication logut)
-- External (logout preformed by external URL; must distroy cookie or call ~/samllogout)
+- Internal (local forms authentication logout)
+- External (logout preformed by external URL; must destroy the forms auth cookie or call ~/samllogout)
 - IFrame (logout form calls into remote url to log out of IDP)
 
-To use saml, your token must support the following claims (exact claim paths can be confiugred in the plugin)
+To use this plugin, your SAML token must support the following claims (exact claim paths can be configured  in the plugin)
 - Username (must be unique)
 - Email Address (must be unique)
 - Display Name (optional)
 
-There are also extensiblity points for custom username and display name handling during the authenticaiton lifecycle.
+There are also extensibility points for custom username and display name handling during the authentication  lifecycle.
 
 
 
