@@ -14,7 +14,7 @@ SAML Binding Support
 
 SAML AuthN support
 - IDP Initiated
-- Redirect (XML signatures not supported)
+- Redirect / HTTP GET (XML signatures not supported in current code)
 - HTTP POST (with optional XML signature)
 
 Logout
