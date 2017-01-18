@@ -132,6 +132,7 @@
     <Compile Include="Components\SamlAttribute.cs" />
     <Compile Include="Components\SamlTokenData.cs" />
     <Compile Include="Components\TokenProcessor.cs" />
+    <Compile Include="Extensibility\ISamlOAuthLinkManager.cs" />
     <Compile Include="SamlOAuthClient.cs" />
     <Compile Include="SamlDisplayNameGenerator.cs" />
     <Compile Include="Extensibility\ISamlUserLookup.cs" />
@@ -170,6 +171,9 @@
     <EmbeddedResource Include="Resources\Widgets\SamlLogout-Widget.xml">
       <SubType>Designer</SubType>
     </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Resources\Images\oauth.gif" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

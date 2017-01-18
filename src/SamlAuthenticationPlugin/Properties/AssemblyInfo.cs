@@ -24,3 +24,4 @@ using System.Web.UI;
 
 //embeded resources
 [assembly: WebResource("SamlAuthenticationPlugin.Resources.Images.saml.png", "image/png")]
+[assembly: WebResource("SamlAuthenticationPlugin.Resources.Images.oauth.gif", "image/gif")]

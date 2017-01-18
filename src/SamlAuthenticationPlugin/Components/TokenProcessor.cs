@@ -43,7 +43,8 @@ namespace Telligent.Services.SamlAuthenticationPlugin.Components
 
             var samlTokenData = new SamlTokenData { Attributes = GetClaims(samlToken), ResponseDate = DateTime.Now };
 
-            samlTokenData.NameId = samlToken.Id;
+
+            samlTokenData.NameId = samlTokenData.ClientId = GetNameId(samlToken);
             samlTokenData.Email = samlTokenData.GetAttribute(tokenProcessorConfiguration.EmailAttributeName, null);
 
             if (usernameGenerator != null && usernameGenerator.Enabled)
@@ -55,6 +56,9 @@ namespace Telligent.Services.SamlAuthenticationPlugin.Components
             if (dispalyNameGenerator != null && dispalyNameGenerator.Enabled)
                 samlTokenData = dispalyNameGenerator.GenerateDisplayName(samlTokenData);
 
+            //fall back to a known claim if the nameid wasnt found in the saml token
+            if(samlTokenData.ClientId == null)
+                samlTokenData.NameId = samlTokenData.ClientId = samlTokenData.UserName;
 
 
 
@@ -207,6 +211,7 @@ namespace Telligent.Services.SamlAuthenticationPlugin.Components
             return samlToken;
         }
 
+        #region Get Claims
 
         public virtual List<SamlAttribute> GetClaims(SecurityToken samlToken)
         {
@@ -238,18 +243,7 @@ namespace Telligent.Services.SamlAuthenticationPlugin.Components
             return claims;
 
         }
-
-        private static IList<System.IdentityModel.Tokens.SamlAttribute> GetTokenAttributes(SamlSecurityToken samlToken)
-        {
-
-            IList<System.IdentityModel.Tokens.SamlAttribute> attributes = null;
-            foreach (SamlStatement statement in samlToken.Assertion.Statements)
-                if (statement.GetType() == typeof(SamlAttributeStatement))
-                    attributes = ((SamlAttributeStatement)statement).Attributes;
-
-            return attributes;
-        }
-
+        
         private static List<SamlAttribute> GetClaims(Saml2SecurityToken samlToken)
         {
 
@@ -268,6 +262,17 @@ namespace Telligent.Services.SamlAuthenticationPlugin.Components
 
         }
 
+        private static IList<System.IdentityModel.Tokens.SamlAttribute> GetTokenAttributes(SamlSecurityToken samlToken)
+        {
+
+            IList<System.IdentityModel.Tokens.SamlAttribute> attributes = null;
+            foreach (SamlStatement statement in samlToken.Assertion.Statements)
+                if (statement.GetType() == typeof(SamlAttributeStatement))
+                    attributes = ((SamlAttributeStatement)statement).Attributes;
+
+            return attributes;
+        }
+
         private static IList<Saml2Attribute> GetTokenAttributes(Saml2SecurityToken samlToken)
         {
 
@@ -278,6 +283,30 @@ namespace Telligent.Services.SamlAuthenticationPlugin.Components
 
             return attributes;
         }
+
+        #endregion
+
+
+        public virtual string GetNameId(SecurityToken samlToken)
+        {
+            //switch between Saml2SecurityToken and SamlSecurityToken
+            if (typeof(SamlSecurityToken).IsAssignableFrom(samlToken.GetType()))
+            {
+                foreach (SamlStatement statement in ((SamlSecurityToken)samlToken).Assertion.Statements)
+                    if (statement.GetType() == typeof(SamlSubjectStatement))
+                        return ((SamlSubjectStatement)statement).SamlSubject.Name;
+
+                return null;
+
+            }
+
+            if (typeof(Saml2SecurityToken).IsAssignableFrom(samlToken.GetType()))
+                return ((Saml2SecurityToken)samlToken).Assertion.Subject.NameId.Value;
+
+            throw new ArgumentException("Cannot Get NameId from the current passed SecurityToken type", "samlToken");
+        }
+
+
 
         #endregion
 
