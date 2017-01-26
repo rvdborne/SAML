@@ -29,14 +29,19 @@ namespace Telligent.Services.SamlAuthenticationPlugin.Components
                 data.SetStringValue(property, CleanThumbprint(value.Trim()));
         }
 
-        private string CleanThumbprint(string thumbprint)
+        private string CleanThumbprint(string thumbprints)
         {
-            char[] arr = thumbprint.ToCharArray();
+            List<string> cleanedThumbprints = new List<string>();
+            foreach (var thumbprint in thumbprints.Split(','))
+            {
+                char[] arr = thumbprint.ToCharArray();
 
-            //faster than a regex
-            arr = Array.FindAll<char>(arr, (c => (char.IsLetterOrDigit(c))));
+                //faster than a regex
+                arr = Array.FindAll<char>(arr, (c => (char.IsLetterOrDigit(c))));
 
-            return new string(arr);
+                cleanedThumbprints.Add(arr.ToString());
+            }
+            return string.Join(",", cleanedThumbprints.ToArray());
         }
 
     }

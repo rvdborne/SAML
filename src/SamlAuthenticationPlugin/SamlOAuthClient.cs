@@ -226,7 +226,7 @@ namespace Telligent.Services.SamlAuthenticationPlugin
         {
             get
             {
-                return PublicApi.Url.Absolute("~/samlauthn").Replace("http:", "https:");
+                return PublicApi.Url.Absolute("~/samlauthn"); //use telligent settings to force site to HTTPS if required
             }
         }
 
