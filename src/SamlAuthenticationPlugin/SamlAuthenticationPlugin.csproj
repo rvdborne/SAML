@@ -167,7 +167,9 @@
     <EmbeddedResource Include="Resources\Pages\SamlLogout-Social-Site-Page.xml">
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="Resources\Widgets\SamlLoginAutoSelect-Widget.xml" />
+    <EmbeddedResource Include="Resources\Widgets\SamlLoginAutoSelect-Widget.xml">
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
     <EmbeddedResource Include="Resources\Widgets\SamlLogout-Widget.xml">
       <SubType>Designer</SubType>
     </EmbeddedResource>

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -45,10 +46,22 @@ namespace Telligent.Services.SamlAuthenticationPlugin.Components
                     samlTokenData = samlUserLookup.GetUser(samlTokenData);
 
 
-                if (samlTokenData.IsExistingUser() && samlPlugin.PersistClaims)
-                    SqlData.SaveSamlToken(samlTokenData);
+                if (samlTokenData.IsExistingUser())
+                {
+                    if (samlPlugin.PersistClaims)
+                        SqlData.SaveSamlToken(samlTokenData);
 
-                //Store out the SAML Token Data in an encrypted cookie for use on the Oauth endpoint which requires a get request
+                    //since new users will have oauth links auto created, we only run this code for existing users
+                    var samlOAuthLinkManager = PluginManager.GetSingleton<ISamlOAuthLinkManager>();
+                    if (samlOAuthLinkManager != null && samlOAuthLinkManager.Enabled)
+                    {
+                        // makes sure the user is not prompted to "link accounts" during the login form
+                        //if there is no suitable entry in the te_OAuth_Links table
+                        samlOAuthLinkManager.EnsureOAuthLink(samlTokenData);
+                    }
+                }
+
+                //Store out the SAML Token Data in an encrypted cookie for use on the OAuth endpoint which requires a GET request
                 var tokenKey = samlTokenData.SaveToSecureCookie();
 
 
