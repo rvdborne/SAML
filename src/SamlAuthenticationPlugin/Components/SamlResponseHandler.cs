@@ -1,14 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Collections.Specialized;
-using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Web;
-using Telligent.Evolution.Components;
 using Telligent.Evolution.Extensibility.Api.Version1;
-using Telligent.Evolution.Extensibility.Authentication.Version1;
 using Telligent.Services.SamlAuthenticationPlugin.Extensibility;
 using PluginManager = Telligent.Evolution.Extensibility.Version1.PluginManager;
 

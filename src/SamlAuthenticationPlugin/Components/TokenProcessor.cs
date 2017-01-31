@@ -3,14 +3,10 @@ using System.Collections.Generic;
 using System.IdentityModel.Selectors;
 using System.IdentityModel.Tokens;
 using System.IO;
-using System.Linq;
 using System.Security.Claims;
 using System.ServiceModel.Security;
-using System.Text;
-using System.Threading.Tasks;
 using System.Xml;
 using Telligent.Evolution.Extensibility.Api.Version1;
-using Telligent.Evolution.Extensibility.Security.Version1;
 using Telligent.Evolution.Extensibility.Version1;
 using Telligent.Services.SamlAuthenticationPlugin.Extensibility;
 

@@ -1,29 +1,16 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.Collections.Specialized;
-using System.IdentityModel.Selectors;
-using System.IdentityModel.Tokens;
-using System.Linq;
-using System.Security.Claims;
-using System.Security.Cryptography;
 using System.ServiceModel.Security;
 using System.Web;
-using System.Web.Routing;
-using System.Web.Security;
 using System.Xml;
 using Telligent.DynamicConfiguration.Components;
-using Telligent.Evolution.Api.Services;
-using Telligent.Evolution.Common;
 using Telligent.Evolution.Extensibility.Api.Version1;
 using Telligent.Evolution.Extensibility.Authentication.Version1;
-using Telligent.Evolution.Extensibility.Security.Version1;
 using Telligent.Evolution.Extensibility.Storage.Version1;
 using Telligent.Evolution.Extensibility.UI.Version1;
 using Telligent.Evolution.Extensibility.Urls.Version1;
 using Telligent.Evolution.Extensibility.Version1;
 using Telligent.Services.SamlAuthenticationPlugin.Components;
-using Telligent.Services.SamlAuthenticationPlugin.Extensibility;
 
 namespace Telligent.Services.SamlAuthenticationPlugin
 {

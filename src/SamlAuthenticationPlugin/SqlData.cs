@@ -1,5 +1,4 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
@@ -360,11 +359,7 @@ namespace Telligent.Services.SamlAuthenticationPlugin
 					                                        (
 						                                        [UserId] ASC,
 						                                        [ClientId] ASC
-					                                        )ON [PRIMARY],
-					                                        UNIQUE NONCLUSTERED 
-					                                        (
-						                                        [ClientId] ASC
-					                                        ) ON [PRIMARY]", databaseOwner);
+					                                        )ON [PRIMARY]", databaseOwner);
                 var myCommand2 = new SqlCommand(sql2, myConnection);
                 myCommand2.CommandType = CommandType.Text;
 
