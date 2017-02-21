@@ -73,7 +73,10 @@ namespace Telligent.Services.SamlAuthenticationPlugin.Components
 
                 oAuthUrl.Query = queryString.ToString();
 
-               
+                //Force to HTTPS so our secure cookie actual works
+                oAuthUrl.Scheme = Uri.UriSchemeHttps;
+                oAuthUrl.Port = -1; // default port for scheme
+
                 //redirect to the oauth endpoint
                 var url = oAuthUrl.Uri.AbsoluteUri;
                 context.Response.Redirect(oAuthUrl.Uri.AbsoluteUri);
