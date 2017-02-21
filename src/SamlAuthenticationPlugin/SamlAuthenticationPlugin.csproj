@@ -83,35 +83,23 @@
     </Reference>
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
-    <Reference Include="Telligent.Common">
-      <HintPath>..\References\Telligent.Common.dll</HintPath>
-    </Reference>
     <Reference Include="Telligent.DynamicConfiguration">
-      <HintPath>..\References\Telligent.DynamicConfiguration.dll</HintPath>
+      <HintPath>..\..\References\Telligent.DynamicConfiguration.dll</HintPath>
     </Reference>
-    <Reference Include="Telligent.Evolution.Api, Version=8.5.1.43931, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\References\Telligent.Evolution.Api.dll</HintPath>
+    <Reference Include="Telligent.Evolution.Api">
+      <HintPath>..\..\References\Telligent.Evolution.Api.dll</HintPath>
     </Reference>
     <Reference Include="Telligent.Evolution.Components">
-      <HintPath>..\References\Telligent.Evolution.Components.dll</HintPath>
+      <HintPath>..\..\References\Telligent.Evolution.Components.dll</HintPath>
     </Reference>
     <Reference Include="Telligent.Evolution.Controls">
-      <HintPath>..\References\Telligent.Evolution.Controls.dll</HintPath>
+      <HintPath>..\..\References\Telligent.Evolution.Controls.dll</HintPath>
     </Reference>
-    <Reference Include="Telligent.Evolution.Core, Version=8.5.1.43931, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\References\Telligent.Evolution.Core.dll</HintPath>
+    <Reference Include="Telligent.Evolution.Core">
+      <HintPath>..\..\References\Telligent.Evolution.Core.dll</HintPath>
     </Reference>
-    <Reference Include="Telligent.Evolution.ScriptedContentFragments, Version=8.5.1.43931, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\References\Telligent.Evolution.ScriptedContentFragments.dll</HintPath>
-    </Reference>
-    <Reference Include="Telligent.Evolution.SecurityModules">
-      <HintPath>..\References\Telligent.Evolution.SecurityModules.dll</HintPath>
-    </Reference>
-    <Reference Include="Telligent.Evolution.VelocityExtensions">
-      <HintPath>..\References\Telligent.Evolution.VelocityExtensions.dll</HintPath>
+    <Reference Include="Telligent.Evolution.ScriptedContentFragments">
+      <HintPath>..\..\References\Telligent.Evolution.ScriptedContentFragments.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>

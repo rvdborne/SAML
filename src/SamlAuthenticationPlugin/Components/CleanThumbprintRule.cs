@@ -39,7 +39,7 @@ namespace Telligent.Services.SamlAuthenticationPlugin.Components
                 //faster than a regex
                 arr = Array.FindAll<char>(arr, (c => (char.IsLetterOrDigit(c))));
 
-                cleanedThumbprints.Add(arr.ToString());
+                cleanedThumbprints.Add(new string(arr));
             }
             return string.Join(",", cleanedThumbprints.ToArray());
         }

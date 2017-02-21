@@ -1,21 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IdentityModel.Services;
-using System.IdentityModel.Tokens;
-using System.IO;
-using System.Linq;
-using System.Security.Claims;
-using System.ServiceModel;
-using System.Text;
-using System.Threading.Tasks;
 using System.Web;
-using System.Xml;
-using Telligent.Evolution.Extensibility.Security.Version1;
 using Telligent.Evolution.Extensibility.Authentication.Version1;
 using System.Xml.Serialization;
 using Telligent.Evolution.Extensibility.Version1;
-using Telligent.Evolution.VelocityExtensions;
-using System.Web.Security;
 using Telligent.Evolution.Extensibility.Api.Version1;
 
 namespace Telligent.Services.SamlAuthenticationPlugin.Components

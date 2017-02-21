@@ -173,6 +173,9 @@ namespace Telligent.Services.SamlAuthenticationPlugin
                 var persistClaims = new Property("persistClaims", "Persist Claims", PropertyType.Bool, 70, "true") { DescriptionText = "If checked, the claim collection will be stored in the database and be avaiable durning non login events." };
                 groups[3].Properties.Add(persistClaims);
 
+                var seureCookie = new Property("seureCookie", "Force HTTPS", PropertyType.Bool, 80, "true") { DescriptionText = "If checked, saml token data will be passed using a secure only (https cookie) uncheck only if your site doesnt support HTTPS (less secure)." };
+                groups[3].Properties.Add(seureCookie);
+
 
                 var iconUrl = new Property("iconUrl", "The URL for the OAuth image", PropertyType.String, 120, _iconUrlDefault) { DescriptionText = "overrides the built in SAML oauth image" };
                 iconUrl.Rules.Add(new PropertyRule(typeof(Telligent.Evolution.Controls.PropertyRules.TrimStringRule), false));
@@ -211,7 +214,10 @@ namespace Telligent.Services.SamlAuthenticationPlugin
         {
             get
             {
-                return PublicApi.Url.Absolute("~/samlauthn"); //use telligent settings to force site to HTTPS if required
+                if(SecureCookie) //use HTTPS only
+                    return PublicApi.Url.Absolute("~/samlauthn").Replace("http:", "https:");
+                else
+                    return PublicApi.Url.Absolute("~/samlauthn"); //use telligent settings to force site to HTTPS if required
             }
         }
 
@@ -329,6 +335,11 @@ namespace Telligent.Services.SamlAuthenticationPlugin
         public bool PersistClaims
         {
             get { return Configuration.GetBool("persistClaims"); }
+        }
+
+        public bool SecureCookie
+        {
+            get { return Configuration.GetBool("secureCookie"); }
         }
 
         public X509CertificateValidationMode CertificateValidationMode
