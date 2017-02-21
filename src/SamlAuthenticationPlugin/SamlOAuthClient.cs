@@ -1,29 +1,16 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.Collections.Specialized;
-using System.IdentityModel.Selectors;
-using System.IdentityModel.Tokens;
-using System.Linq;
-using System.Security.Claims;
-using System.Security.Cryptography;
 using System.ServiceModel.Security;
 using System.Web;
-using System.Web.Routing;
-using System.Web.Security;
 using System.Xml;
 using Telligent.DynamicConfiguration.Components;
-using Telligent.Evolution.Api.Services;
-using Telligent.Evolution.Common;
 using Telligent.Evolution.Extensibility.Api.Version1;
 using Telligent.Evolution.Extensibility.Authentication.Version1;
-using Telligent.Evolution.Extensibility.Security.Version1;
 using Telligent.Evolution.Extensibility.Storage.Version1;
 using Telligent.Evolution.Extensibility.UI.Version1;
 using Telligent.Evolution.Extensibility.Urls.Version1;
 using Telligent.Evolution.Extensibility.Version1;
 using Telligent.Services.SamlAuthenticationPlugin.Components;
-using Telligent.Services.SamlAuthenticationPlugin.Extensibility;
 
 namespace Telligent.Services.SamlAuthenticationPlugin
 {
@@ -106,7 +93,7 @@ namespace Telligent.Services.SamlAuthenticationPlugin
         {
             get
             {
-                PropertyGroup[] groups = new[] { new PropertyGroup("issuer", "Issuer", 0), new PropertyGroup("auth", "AuthN", 1), new PropertyGroup("claims", "Claims", 2), new PropertyGroup("options", "Options", 3) };
+                PropertyGroup[] groups = new[] { new PropertyGroup("issuer", "Issuer", 0), new PropertyGroup("auth", "AuthN", 1), new PropertyGroup("logout", "Logout", 2), new PropertyGroup("options", "Options", 3) };
 
                 #region Issuer
 
@@ -119,23 +106,31 @@ namespace Telligent.Services.SamlAuthenticationPlugin
                 IdpBindingType.SelectableValues.Add(new PropertyValue(SamlBinding.SAML20_POST.ToString(), SamlBinding.SAML20_POST.ToString(), 2));
                 groups[0].Properties.Add(IdpBindingType);
 
-                var issuerThumbprint = new Property("issuerThumbprint", "Issuer Thumbprint", PropertyType.String, 90, _issuerThumbprintDefault) { DescriptionText = "The thumbprint of the trusted issuers public key (used to validate the SAML token)" };
+                var issuerThumbprint = new Property("issuerThumbprint", "Issuer Certificate Thumbprints", PropertyType.String, 30, _issuerThumbprintDefault) { DescriptionText = "A comma seperated list of thumbprints used by the trusted issuer(s) (used to validate the SAML token)" };
                 issuerThumbprint.Rules.Add(new PropertyRule(typeof(Telligent.Services.SamlAuthenticationPlugin.Components.CleanThumbprintRule), false));
                 groups[0].Properties.Add(issuerThumbprint);
 
-                var issuerCertificateValidationMode = new Property("issuerCertificateValidationMode", "Issuer Certificate Validation Mode", PropertyType.String, 95, _issuerCertificateValidationModeDefault.ToString()) { DescriptionText = "Validation of the SAML signing certificate issuer" };
+                var issuerCertificateValidationMode = new Property("issuerCertificateValidationMode", "Issuer Certificate Validation Mode", PropertyType.String, 40, _issuerCertificateValidationModeDefault.ToString()) { DescriptionText = "Validation of the SAML signing certificate issuer" };
                 issuerCertificateValidationMode.SelectableValues.Add(new PropertyValue(X509CertificateValidationMode.ChainTrust.ToString(), X509CertificateValidationMode.ChainTrust.ToString(), 1));
                 issuerCertificateValidationMode.SelectableValues.Add(new PropertyValue(X509CertificateValidationMode.PeerOrChainTrust.ToString(), X509CertificateValidationMode.PeerOrChainTrust.ToString(), 2));
                 issuerCertificateValidationMode.SelectableValues.Add(new PropertyValue(X509CertificateValidationMode.PeerTrust.ToString(), X509CertificateValidationMode.PeerTrust.ToString(), 3));
                 issuerCertificateValidationMode.SelectableValues.Add(new PropertyValue(X509CertificateValidationMode.None.ToString(), X509CertificateValidationMode.None.ToString(), 4));
                 groups[0].Properties.Add(issuerCertificateValidationMode);
 
-                var subjectRecipientValidationMode = new Property("subjectRecipientValidationMode", "Token Subject Recipient Validation Mode", PropertyType.String, 100, _subjectRecipientValidationModeDefault.ToString()) { DescriptionText = "Rules to use for validation of SAML Token Subject Recipient clause" };
+                var subjectRecipientValidationMode = new Property("subjectRecipientValidationMode", "Token Subject Recipient Validation Mode", PropertyType.String, 50, _subjectRecipientValidationModeDefault.ToString()) { DescriptionText = "Rules to use for validation of SAML Token Subject Recipient clause" };
                 subjectRecipientValidationMode.SelectableValues.Add(new PropertyValue(SubjectRecipientValidationMode.ExactMatch.ToString(), SubjectRecipientValidationMode.ExactMatch.ToString(), 1));
                 subjectRecipientValidationMode.SelectableValues.Add(new PropertyValue(SubjectRecipientValidationMode.HostOnly.ToString(), SubjectRecipientValidationMode.HostOnly.ToString(), 2));
                 subjectRecipientValidationMode.SelectableValues.Add(new PropertyValue(SubjectRecipientValidationMode.HostAndScheme.ToString(), SubjectRecipientValidationMode.HostAndScheme.ToString(), 3));
                 subjectRecipientValidationMode.SelectableValues.Add(new PropertyValue(SubjectRecipientValidationMode.None.ToString(), SubjectRecipientValidationMode.None.ToString(), 4));
                 groups[0].Properties.Add(subjectRecipientValidationMode);
+
+                var usernameClaim = new Property("usernameClaim", "User Name Attribute Name", PropertyType.String, 60, _usernameClaimDefault) { DescriptionText = "The name saml attribute containing the users name. (Must be present, must be unique, must be valid based on community settings.)" }; ;
+                usernameClaim.Rules.Add(new PropertyRule(typeof(Telligent.Evolution.Controls.PropertyRules.TrimStringRule), false));
+                groups[0].Properties.Add(usernameClaim);
+
+                var emailClaim = new Property("emailClaim", "Email Address Attribute name", PropertyType.String, 70, _emailClaimDefault) { DescriptionText = "The name saml attribute containing the users email address. (Must be present, must be unique.)" };
+                emailClaim.Rules.Add(new PropertyRule(typeof(Telligent.Evolution.Controls.PropertyRules.TrimStringRule), false));
+                groups[0].Properties.Add(emailClaim);
 
                 #endregion
 
@@ -144,31 +139,30 @@ namespace Telligent.Services.SamlAuthenticationPlugin
                 var idpAuthRequestType = new Property("idpAuthRequestType", "AuthN Binding Type", PropertyType.String, 100, _idpAuthRequestTypeDefault.ToString()) { DescriptionText = "The AuthN request type to intiate the saml login (IDP_Initiated is a simple redirect without AuthN payload)" };
                 idpAuthRequestType.SelectableValues.Add(new PropertyValue(AuthnBinding.IDP_Initiated.ToString(), AuthnBinding.IDP_Initiated.ToString(), 1));
                 idpAuthRequestType.SelectableValues.Add(new PropertyValue(AuthnBinding.Redirect.ToString(), AuthnBinding.Redirect.ToString(), 2));
-                idpAuthRequestType.SelectableValues.Add(new PropertyValue(AuthnBinding.SignedRedirect.ToString(), AuthnBinding.SignedRedirect.ToString(), 3));
+                //idpAuthRequestType.SelectableValues.Add(new PropertyValue(AuthnBinding.SignedRedirect.ToString(), AuthnBinding.SignedRedirect.ToString(), 3));  //not yet supported
                 idpAuthRequestType.SelectableValues.Add(new PropertyValue(AuthnBinding.POST.ToString(), AuthnBinding.POST.ToString(), 4));
                 idpAuthRequestType.SelectableValues.Add(new PropertyValue(AuthnBinding.SignedPOST.ToString(), AuthnBinding.SignedPOST.ToString(), 5));
                 groups[1].Properties.Add(idpAuthRequestType);
 
-                var authThumbprint = new Property("authThumbprint", "AuthN Certificate Thumbprint", PropertyType.String, 7, _authThumbprintDefault) { DescriptionText = "The Thumbprint of a private key located in the localmachine/personal store, for which the applicaiton pool user has been given permissions; used to sign the AuthN request" };
+                var authThumbprint = new Property("authThumbprint", "AuthN Certificate Thumbprint", PropertyType.String, 110, _authThumbprintDefault) { DescriptionText = "The Thumbprint of a private key located in the localmachine/personal store, for which the applicaiton pool user has been given permissions; required for signed AuthN request types" };
                 authThumbprint.Rules.Add(new PropertyRule(typeof(Telligent.Services.SamlAuthenticationPlugin.Components.CleanThumbprintRule), false));
                 groups[1].Properties.Add(authThumbprint);
 
 
                 #endregion
 
-                #region Claims
+                #region Logout
 
-                var usernameClaim = new Property("usernameClaim", "User Name Attribute Name", PropertyType.String, 30, _usernameClaimDefault) { DescriptionText = "The name saml attribute containing the users name. (Used for account auto-creation.)" }; ;
-                usernameClaim.Rules.Add(new PropertyRule(typeof(Telligent.Evolution.Controls.PropertyRules.TrimStringRule), false));
-                groups[2].Properties.Add(usernameClaim);
+                var logoutUrlBehavior = new Property("logoutUrlBehavior", "Logout Behavior", PropertyType.String, 200, _logoutUrlBehaviorDefault.ToString()) { DescriptionText = "Controls how the site uses the logout Url (Internal the URL is not used or requred; the default platform logout is used)" };
+                logoutUrlBehavior.SelectableValues.Add(new PropertyValue(LogoutUrlBehavior.INTERNAL.ToString(), LogoutUrlBehavior.INTERNAL.ToString(), 1));
+                logoutUrlBehavior.SelectableValues.Add(new PropertyValue(LogoutUrlBehavior.EXTERNAL.ToString(), LogoutUrlBehavior.EXTERNAL.ToString(), 2));
+                logoutUrlBehavior.SelectableValues.Add(new PropertyValue(LogoutUrlBehavior.IFRAME.ToString(), LogoutUrlBehavior.IFRAME.ToString(), 3));
+                groups[2].Properties.Add(logoutUrlBehavior);
 
-                var emailClaim = new Property("emailClaim", "Email Address Attribute name", PropertyType.String, 40, _emailClaimDefault) { DescriptionText = "The name saml attribute containing the users email address. (Used for account auto-creation.)" };
-                emailClaim.Rules.Add(new PropertyRule(typeof(Telligent.Evolution.Controls.PropertyRules.TrimStringRule), false));
-                groups[2].Properties.Add(emailClaim);
 
-                var persistClaims = new Property("persistClaims", "Persist Claims", PropertyType.Bool, 70, "true") { DescriptionText = "If checked, the claim collection will be stored in the database and be avaiable durning non login events." };
-                groups[0].Properties.Add(persistClaims);
-
+                var logoutUrl = new Property("logoutUrl", "Identity Provider Logout Url", PropertyType.String, 210, _logoutUrlDefault) { DescriptionText = "Identity Provider Logout Url (used by Iframe or external options)" };
+                logoutUrl.Rules.Add(new PropertyRule(typeof(Telligent.Evolution.Controls.PropertyRules.TrimStringRule), false));
+                groups[2].Properties.Add(logoutUrl);
 
                 #endregion
 
@@ -176,18 +170,9 @@ namespace Telligent.Services.SamlAuthenticationPlugin
                 var allowTokenMatchingByEmailAddress = new Property("allowTokenMatchingByEmailAddress", "Lookup Users By Email", PropertyType.Bool, 50, _allowTokenMatchingByEmailAddressDefault.ToString()) { DescriptionText = "Allow the email address to be used to locate an existing user account if the username doesnt match." };
                 groups[3].Properties.Add(allowTokenMatchingByEmailAddress);
 
-                var allowAutoUserRegistrationConfig = new Property("allowAutoUserRegistration", "Allow automatic registration for new users", PropertyType.Bool, 60, _allowAutoUserRegistrationDefault.ToString()) { DescriptionText = "If checked, authenticated users who don't currently have an account in the community will have one automatically created for them. (Registration expierence is controlled by the settings of the 'Integrated Forms Authentication Options' plugin)" };
-                groups[3].Properties.Add(allowAutoUserRegistrationConfig);
+                var persistClaims = new Property("persistClaims", "Persist Claims", PropertyType.Bool, 70, "true") { DescriptionText = "If checked, the claim collection will be stored in the database and be avaiable durning non login events." };
+                groups[3].Properties.Add(persistClaims);
 
-                var logoutUrl = new Property("logoutUrl", "The URL for the logout page", PropertyType.String, 110, _logoutUrlDefault) { DescriptionText = "STS Logout Url (loaded in an iframe on the platform logout page; or leave blank for a local logout only)" };
-                logoutUrl.Rules.Add(new PropertyRule(typeof(Telligent.Evolution.Controls.PropertyRules.TrimStringRule), false));
-                groups[3].Properties.Add(logoutUrl);
-
-                var logoutUrlBehavior = new Property("logoutUrlBehavior", "Logout Url Behavior", PropertyType.String, 115, _logoutUrlBehaviorDefault.ToString()) { DescriptionText = "Controls how the site uses the logout Url (Internal the URL is not used or requred; the default platform logout is used)" };
-                logoutUrlBehavior.SelectableValues.Add(new PropertyValue(LogoutUrlBehavior.INTERNAL.ToString(), LogoutUrlBehavior.INTERNAL.ToString(), 1));
-                logoutUrlBehavior.SelectableValues.Add(new PropertyValue(LogoutUrlBehavior.EXTERNAL.ToString(), LogoutUrlBehavior.EXTERNAL.ToString(), 2));
-                logoutUrlBehavior.SelectableValues.Add(new PropertyValue(LogoutUrlBehavior.IFRAME.ToString(), LogoutUrlBehavior.IFRAME.ToString(), 3));
-                groups[3].Properties.Add(logoutUrlBehavior);
 
                 var iconUrl = new Property("iconUrl", "The URL for the OAuth image", PropertyType.String, 120, _iconUrlDefault) { DescriptionText = "overrides the built in SAML oauth image" };
                 iconUrl.Rules.Add(new PropertyRule(typeof(Telligent.Evolution.Controls.PropertyRules.TrimStringRule), false));
@@ -226,7 +211,7 @@ namespace Telligent.Services.SamlAuthenticationPlugin
         {
             get
             {
-                return PublicApi.Url.Absolute("~/samlauthn").Replace("http:", "https:");
+                return PublicApi.Url.Absolute("~/samlauthn"); //use telligent settings to force site to HTTPS if required
             }
         }
 
@@ -322,11 +307,6 @@ namespace Telligent.Services.SamlAuthenticationPlugin
         public bool AllowTokenMatchingByEmailAddress
         {
             get { return Configuration.GetBool("allowTokenMatchingByEmailAddress"); }
-        }
-
-        public bool AllowUserAutoCreation
-        {
-            get { return Configuration.GetBool("allowAutoUserRegistration"); }
         }
 
         //required by IAuthenticationPlugin

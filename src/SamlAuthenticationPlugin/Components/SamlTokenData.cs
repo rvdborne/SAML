@@ -163,7 +163,7 @@ namespace Telligent.Services.SamlAuthenticationPlugin.Components
         {
             var oAuthData = new OAuthData();
 
-            oAuthData.ClientId = this.Email;
+            oAuthData.ClientId = this.ClientId;  //note: by default this is the NameId from the saml token
             oAuthData.ClientType = SamlOAuthClient.clientType;
             oAuthData.CommonName = this.CommonName;
             oAuthData.Email = this.Email;

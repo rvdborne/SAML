@@ -1,5 +1,4 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
@@ -133,45 +132,6 @@ namespace Telligent.Services.SamlAuthenticationPlugin
             catch (Exception ex)
             {
                 PublicApi.Eventlogs.Write("Error inserting token into the db_SamlTokenStore. " + ex.ToString(), new EventLogEntryWriteOptions() { Category = "SAML", EventId = 6009, EventType = "Error" });
-            }
-
-        }
-
-
-        private static void InsertSamlLink(int userId, string clientUserId)
-        {
-            try
-            {
-                using (SqlConnection myConnection = GetSqlConnection())
-                {
-                    string sql =
-                        string.Format(
-                            @"INSERT INTO [{0}].[db_Saml_Links]
-                                   ([UserId]
-                                   ,[ClientType]
-                                   ,[ClientUserId])
-                             VALUES
-                                   (@userId
-                                   ,@clientType
-                                   ,@clientUserId)",
-                            databaseOwner);
-
-                    SqlCommand myCommand = new SqlCommand(sql, myConnection);
-                    myCommand.CommandType = CommandType.Text;
-
-                    myCommand.Parameters.Add("@userId", SqlDbType.Int).Value = userId;
-                    myCommand.Parameters.Add("@clientUserId", SqlDbType.NVarChar).Value = clientUserId;
-                    myCommand.Parameters.Add("@clientType", SqlDbType.NVarChar).Value = "SAML";
-
-                    // Execute the command
-                    myConnection.Open();
-                    myCommand.ExecuteNonQuery();
-
-                }
-            }
-            catch (Exception ex)
-            {
-                PublicApi.Eventlogs.Write("Error inserting token into the db_SAML_Links. " + ex.ToString(), new EventLogEntryWriteOptions() { Category = "SAML", EventId = 6009, EventType = "Error" });
             }
 
         }
@@ -399,11 +359,7 @@ namespace Telligent.Services.SamlAuthenticationPlugin
 					                                        (
 						                                        [UserId] ASC,
 						                                        [ClientId] ASC
-					                                        )ON [PRIMARY],
-					                                        UNIQUE NONCLUSTERED 
-					                                        (
-						                                        [ClientId] ASC
-					                                        ) ON [PRIMARY]", databaseOwner);
+					                                        )ON [PRIMARY]", databaseOwner);
                 var myCommand2 = new SqlCommand(sql2, myConnection);
                 myCommand2.CommandType = CommandType.Text;
 

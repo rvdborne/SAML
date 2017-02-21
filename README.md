@@ -2,6 +2,35 @@
 
 Version 3.0 compatible with Telligent Community 7.x and Up
 
+#### What is the SAML Authentication Plugin
+
+This plugin allows your community to receive a SAML tokens via HTTP POST at a new endpoint / route ( ~/samlresponse ).
+will receive, validate and unpackage the SAML token and repackages it in a way compatible with the out of the box IOAuthClient extensibility features.  It supports 
+SAML 1.1 HTTP POST and SAML 2.0 HTTP POST bindings, configurable AuthN request scenarios, has several options for handling logout scenarios.
+
+SAML Binding Support
+- SAML 1.1 HTTP POST
+- SAML 2.0 HTTP Post
+
+SAML AuthN support
+- IDP Initiated
+- Redirect / HTTP GET (XML signatures not supported in current code)
+- HTTP POST (with optional XML signature)
+
+Logout
+- Internal (local forms authentication logout)
+- External (logout preformed by external URL; must destroy the forms auth cookie or call ~/samllogout)
+- IFrame (logout form calls into remote url to log out of IDP)
+
+To use this plugin, your SAML token must support the following claims (exact claim paths can be configured  in the plugin)
+- Username (must be unique)
+- Email Address (must be unique)
+- Display Name (optional)
+
+There are also extensibility points for custom username and display name handling during the authentication  lifecycle.
+
+
+
 #### Dependencies
 
 Please copy your local Community library files to the **References** folder. 
