@@ -87,6 +87,7 @@ namespace Telligent.Services.SamlAuthenticationPlugin
         {
             Configuration = configuration;
             tokenProcessor = null; //reset the security token handler so we can regen it
+            InitializeScheama();
         }
 
         public DynamicConfiguration.Components.PropertyGroup[] ConfigurationOptions
@@ -170,7 +171,7 @@ namespace Telligent.Services.SamlAuthenticationPlugin
                 var allowTokenMatchingByEmailAddress = new Property("allowTokenMatchingByEmailAddress", "Lookup Users By Email", PropertyType.Bool, 50, _allowTokenMatchingByEmailAddressDefault.ToString()) { DescriptionText = "Allow the email address to be used to locate an existing user account if the username doesnt match." };
                 groups[3].Properties.Add(allowTokenMatchingByEmailAddress);
 
-                var persistClaims = new Property("persistClaims", "Persist Claims", PropertyType.Bool, 70, "true") { DescriptionText = "If checked, the claim collection will be stored in the database and be avaiable durning non login events." };
+                var persistClaims = new Property("persistClaims", "Persist Claims", PropertyType.Bool, 70, "false") { DescriptionText = "If checked, the claim collection will be stored in the database and be avaiable durning non login events." };
                 groups[3].Properties.Add(persistClaims);
 
                 var seureCookie = new Property("seureCookie", "Force HTTPS", PropertyType.Bool, 80, "true") { DescriptionText = "If checked, saml token data will be passed using a secure only (https cookie) uncheck only if your site doesnt support HTTPS (less secure)." };
@@ -190,10 +191,13 @@ namespace Telligent.Services.SamlAuthenticationPlugin
         }
 
         #endregion
+        public void Initialize()
+        {
+        }
 
         object lockObject = new object();
 
-        public void Initialize()
+        private void InitializeScheama()
         {
             if (PersistClaims)
             {
@@ -648,7 +652,6 @@ namespace Telligent.Services.SamlAuthenticationPlugin
 
             #endregion
 
-
             #region Insert Widgets Into existing themes and pages
 
             foreach (var theme in Themes.List(ThemeTypes.Site))
@@ -672,6 +675,10 @@ namespace Telligent.Services.SamlAuthenticationPlugin
             }
 
 
+            #endregion
+
+            #region Create Database Table if required
+            InitializeScheama();
             #endregion
         }
 
