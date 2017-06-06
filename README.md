@@ -1,6 +1,6 @@
 # SAML Authentication Plugin
 
-Version 3.0 compatible with Telligent Community 7.x and Up
+Plugin Version 3.0 compatible with Telligent Community 7.x and Up
 
 #### What is the SAML Authentication Plugin
 
@@ -85,4 +85,5 @@ If you are required to manually run the sql schema updates, be sure to use a ver
   - Copy all files and folders from Web/Languages to the same folder in the Job Scheduler installation.
 3. Restart your Job Scheduler Service.
 
-
+#### User Management
+If you have existing users in your database or create users outside of the SAML workflow (e.g., via the Administration area or REST) those Users will need to know the username and password used to create the account so they are able to link their Telligent user with their SAML user identity.
