@@ -4,6 +4,7 @@ using System.ServiceModel.Security;
 using System.Web;
 using System.Xml;
 using Telligent.DynamicConfiguration.Components;
+using Telligent.Evolution.Extensibility;
 using Telligent.Evolution.Extensibility.Api.Version1;
 using Telligent.Evolution.Extensibility.Authentication.Version1;
 using Telligent.Evolution.Extensibility.Storage.Version1;
@@ -218,10 +219,11 @@ namespace Telligent.Services.SamlAuthenticationPlugin
         {
             get
             {
+                var apiUrl = Apis.Get<IUrl>();
                 if(SecureCookie) //use HTTPS only
-                    return PublicApi.Url.Absolute("~/samlauthn").Replace("http:", "https:");
+                    return apiUrl.Absolute("~/samlauthn").Replace("http:", "https:");
                 else
-                    return PublicApi.Url.Absolute("~/samlauthn"); //use telligent settings to force site to HTTPS if required
+                    return apiUrl.Absolute("~/samlauthn"); //use telligent settings to force site to HTTPS if required
             }
         }
 
@@ -450,18 +452,19 @@ namespace Telligent.Services.SamlAuthenticationPlugin
         protected virtual void ProcessReturnUrl()
         {
             string returnUrl = SamlHelpers.GetCookieReturnUrl();
+            var apiCoreUrls = Apis.Get<ICoreUrls>();
 
             SamlHelpers.ClearCookieReturnUrl();
 
             if (string.IsNullOrEmpty(returnUrl))
             {
-                returnUrl = PublicApi.CoreUrls.Home();
+                returnUrl = apiCoreUrls.Home();
             }
 
             if (!string.IsNullOrEmpty(returnUrl) && SamlHelpers.IsPathOnSameServer(returnUrl, HttpContext.Current.Request.Url))
                 HttpContext.Current.Response.Redirect(returnUrl, true);
 
-            HttpContext.Current.Response.Redirect(PublicApi.CoreUrls.Home(), true);
+            HttpContext.Current.Response.Redirect(apiCoreUrls.Home(), true);
         }
 
 
@@ -480,7 +483,7 @@ namespace Telligent.Services.SamlAuthenticationPlugin
         {
             get
             {
-                return PublicApi.CoreUrls.LogIn(new CoreUrlLoginOptions(){ ReturnToCurrentUrl = false} ) + "?oauth_data_token_key=TOKEN"; //SiteUrls.Instance().LoginClean
+                return Apis.Get<ICoreUrls>().LogIn(new CoreUrlLoginOptions(){ ReturnToCurrentUrl = false} ) + "?oauth_data_token_key=TOKEN"; //SiteUrls.Instance().LoginClean
             }
             set
             {

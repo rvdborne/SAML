@@ -1,8 +1,9 @@
 ﻿using System;
 using System.Web;
+using Telligent.Evolution.Components;
+using Telligent.Evolution.Extensibility;
 using Telligent.Evolution.Extensibility.Api.Version1;
 using Telligent.Services.SamlAuthenticationPlugin.Extensibility;
-using PluginManager = Telligent.Evolution.Extensibility.Version1.PluginManager;
 
 namespace Telligent.Services.SamlAuthenticationPlugin.Components
 {
@@ -10,17 +11,18 @@ namespace Telligent.Services.SamlAuthenticationPlugin.Components
     {
         #region IHttpHandler Members
 
-        public bool IsReusable { get { return true; } }
+        public bool IsReusable => true;
 
         public void ProcessRequest(HttpContext context)
         {
-            var samlPlugin = PluginManager.GetSingleton<SamlOAuthClient>();
+            var pluginManager = Common.Services.Get<IPluginManager>();
+            var samlPlugin = pluginManager.GetSingleton<SamlOAuthClient>();
             if (samlPlugin == null || !samlPlugin.Enabled)
                 throw new InvalidOperationException("Unable to load the SamlAuthentication plugin; saml logins are not supported in the current configuration");
 
             if (SamlHelpers.IsSignInResponse)
             {
-                var samlUserLookup = PluginManager.GetSingleton<ISamlUserLookup>();
+                var samlUserLookup = pluginManager.GetSingleton<ISamlUserLookup>();
 
                 //use httpcontextuser is set to true, so this code below will only ever fire if there is a HttpContextUser set
                 SamlTokenData samlTokenData = null;
@@ -44,7 +46,7 @@ namespace Telligent.Services.SamlAuthenticationPlugin.Components
                         SqlData.SaveSamlToken(samlTokenData);
 
                     //since new users will have oauth links auto created, we only run this code for existing users
-                    var samlOAuthLinkManager = PluginManager.GetSingleton<ISamlOAuthLinkManager>();
+                    var samlOAuthLinkManager = pluginManager.GetSingleton<ISamlOAuthLinkManager>();
                     if (samlOAuthLinkManager != null && samlOAuthLinkManager.Enabled)
                     {
                         // makes sure the user is not prompted to "link accounts" during the login form
@@ -87,7 +89,7 @@ namespace Telligent.Services.SamlAuthenticationPlugin.Components
 
                 //redirect to the oauth endpoint
                 var url = oAuthUrl.Uri.AbsoluteUri;
-                context.Response.Redirect(oAuthUrl.Uri.AbsoluteUri);
+                context.Response.Redirect(url);
                 context.ApplicationInstance.CompleteRequest();
                 context.Response.End();
 
@@ -107,7 +109,7 @@ namespace Telligent.Services.SamlAuthenticationPlugin.Components
 
             if (string.IsNullOrEmpty(returnUrl))
             {
-                returnUrl = PublicApi.Url.Absolute(PublicApi.CoreUrls.Home());
+                returnUrl = Apis.Get<IUrl>().Absolute(Apis.Get<ICoreUrls>().Home());
             }
 
             return returnUrl;

@@ -10,7 +10,7 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>Telligent.Services.SamlAuthenticationPlugin</RootNamespace>
     <AssemblyName>Telligent.Services.SamlAuthenticationPlugin</AssemblyName>
-    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.6.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <FileUpgradeFlags>
     </FileUpgradeFlags>
@@ -83,23 +83,29 @@
     </Reference>
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
+    <Reference Include="Telligent.Common">
+      <HintPath>..\References\Telligent.Common.dll</HintPath>
+    </Reference>
     <Reference Include="Telligent.DynamicConfiguration">
-      <HintPath>..\..\References\Telligent.DynamicConfiguration.dll</HintPath>
+      <HintPath>..\References\Telligent.DynamicConfiguration.dll</HintPath>
     </Reference>
     <Reference Include="Telligent.Evolution.Api">
-      <HintPath>..\..\References\Telligent.Evolution.Api.dll</HintPath>
+      <HintPath>..\References\Telligent.Evolution.Api.dll</HintPath>
     </Reference>
     <Reference Include="Telligent.Evolution.Components">
-      <HintPath>..\..\References\Telligent.Evolution.Components.dll</HintPath>
+      <HintPath>..\References\Telligent.Evolution.Components.dll</HintPath>
     </Reference>
     <Reference Include="Telligent.Evolution.Controls">
-      <HintPath>..\..\References\Telligent.Evolution.Controls.dll</HintPath>
+      <HintPath>..\References\Telligent.Evolution.Controls.dll</HintPath>
     </Reference>
     <Reference Include="Telligent.Evolution.Core">
-      <HintPath>..\..\References\Telligent.Evolution.Core.dll</HintPath>
+      <HintPath>..\References\Telligent.Evolution.Core.dll</HintPath>
+    </Reference>
+    <Reference Include="Telligent.Evolution.Platform">
+      <HintPath>..\References\Telligent.Evolution.Platform.dll</HintPath>
     </Reference>
     <Reference Include="Telligent.Evolution.ScriptedContentFragments">
-      <HintPath>..\..\References\Telligent.Evolution.ScriptedContentFragments.dll</HintPath>
+      <HintPath>..\References\Telligent.Evolution.ScriptedContentFragments.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>

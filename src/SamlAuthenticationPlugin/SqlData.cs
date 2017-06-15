@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
+using Telligent.Evolution.Extensibility;
 using Telligent.Evolution.Extensibility.Api.Version1;
 using Telligent.Services.SamlAuthenticationPlugin.Components;
 
@@ -21,7 +22,7 @@ namespace Telligent.Services.SamlAuthenticationPlugin
 
             try
             {
-                return PublicApi.DatabaseConnections.GetConnection("SiteSqlServer");
+                return Apis.Get<IDatabaseConnections>().GetConnection("SiteSqlServer");
             }
             catch
             {
@@ -75,7 +76,7 @@ namespace Telligent.Services.SamlAuthenticationPlugin
             }
             catch (Exception ex)
             {
-                PublicApi.Eventlogs.Write("Error reading from db_SamlTokenStore; I dont think its installed. " + ex.ToString(), new EventLogEntryWriteOptions(){ Category= "SAML",  EventId =  6011, EventType="Error"});
+                Apis.Get<IEventLog>().Write("Error reading from db_SamlTokenStore; I dont think its installed. " + ex, new EventLogEntryWriteOptions { Category= "SAML",  EventId =  6011, EventType="Error"});
             }
 
             return null;
@@ -131,7 +132,7 @@ namespace Telligent.Services.SamlAuthenticationPlugin
             }
             catch (Exception ex)
             {
-                PublicApi.Eventlogs.Write("Error inserting token into the db_SamlTokenStore. " + ex.ToString(), new EventLogEntryWriteOptions() { Category = "SAML", EventId = 6009, EventType = "Error" });
+                Apis.Get<IEventLog>().Write("Error inserting token into the db_SamlTokenStore. " + ex, new EventLogEntryWriteOptions { Category = "SAML", EventId = 6009, EventType = "Error" });
             }
 
         }
@@ -181,7 +182,7 @@ namespace Telligent.Services.SamlAuthenticationPlugin
             }
             catch (Exception ex)
             {
-                PublicApi.Eventlogs.Write("Error updating from db_SamlTokenStore. " + ex.ToString(), new EventLogEntryWriteOptions() { Category = "SAML", EventId = 6010, EventType = "Error" });
+                Apis.Get<IEventLog>().Write("Error updating from db_SamlTokenStore. " + ex, new EventLogEntryWriteOptions { Category = "SAML", EventId = 6010, EventType = "Error" });
             }
 
        }
@@ -236,7 +237,7 @@ namespace Telligent.Services.SamlAuthenticationPlugin
             }
             catch (Exception ex)
             {
-                PublicApi.Eventlogs.Write("Error reading from db_SamlTokenStore. " + ex.ToString(), new EventLogEntryWriteOptions(){ Category= "SAML", EventId = 6012, EventType="Error"});
+                Apis.Get<IEventLog>().Write("Error reading from db_SamlTokenStore. " + ex, new EventLogEntryWriteOptions { Category= "SAML", EventId = 6012, EventType="Error"});
             }
 
             return null;
