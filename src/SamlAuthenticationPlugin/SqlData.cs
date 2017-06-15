@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
+using Telligent.Evolution.Components;
 using Telligent.Evolution.Extensibility;
 using Telligent.Evolution.Extensibility.Api.Version1;
 using Telligent.Services.SamlAuthenticationPlugin.Components;
@@ -14,15 +15,14 @@ namespace Telligent.Services.SamlAuthenticationPlugin
     public class SqlData
     {
         static string databaseOwner = "dbo";
-
-
+        
         #region Helper methods & properties
         protected static SqlConnection GetSqlConnection()
-        {
-
+        {            
             try
             {
-                return Apis.Get<IDatabaseConnections>().GetConnection("SiteSqlServer");
+                var connectionProvider = Common.Services.Get<IDbConnectionProvider>();
+                return connectionProvider.GetSqlConnection("SiteSqlServer");
             }
             catch
             {
@@ -33,8 +33,7 @@ namespace Telligent.Services.SamlAuthenticationPlugin
 
         #endregion
 
-        private SqlData()
-        { }
+        private SqlData() {}
 
         public static void SaveSamlToken(SamlTokenData samlTokenData)
         {
