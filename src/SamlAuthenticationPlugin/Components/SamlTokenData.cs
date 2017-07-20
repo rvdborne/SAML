@@ -162,27 +162,26 @@ namespace Telligent.Services.SamlAuthenticationPlugin.Components
         }
 
 
-        internal Guid SaveToSecureCookie()
+        internal string SaveToSecureCookie()
         {
             var tokenKey = Guid.NewGuid();
             string samlXml = SamlHelpers.ConvertToString(this);
             var encryptedToken = SamlHelpers.Protect(samlXml, this.GetType().Name);
 
-            // Add the cookie to the request to save it
             HttpCookie cookie = new HttpCookie(tokenKey.ToString(), encryptedToken);
             cookie.HttpOnly = true;
             cookie.Secure = HttpContext.Current.Request.IsSecureConnection;
             
-            HttpContext.Current.Response.Cookies.Add(cookie);
+            CookieHelper.AddCookie(cookie);
 
-            return tokenKey;
+            return tokenKey.ToString();
         }
 
         internal static SamlTokenData GetFromSecureCookie(string tokenKey)
         {
             try
             {
-                HttpCookie secureCookie = HttpContext.Current.Request.Cookies[tokenKey];
+                HttpCookie secureCookie = CookieHelper.GetCookie(tokenKey);
                 var samlXml = SamlHelpers.Unprotect(secureCookie.Value, typeof(SamlTokenData).Name);
                 var samlTokenData = SamlHelpers.Deserialize<SamlTokenData>(samlXml);
                 return samlTokenData;
@@ -193,21 +192,6 @@ namespace Telligent.Services.SamlAuthenticationPlugin.Components
             }
             return null;
         }
-
-        internal static void DistroySecureCookie(string tokenKey)
-        {
-
-            HttpCookie secureCookie = HttpContext.Current.Request.Cookies[tokenKey];
-            if (secureCookie != null)
-            {
-                HttpContext.Current.Response.Cookies.Remove(tokenKey);
-                secureCookie.Expires = DateTime.Now.AddDays(-1);
-                secureCookie.Value = null;
-                HttpContext.Current.Response.SetCookie(secureCookie);
-            }
- 
-        }
-
     }
 
 }

@@ -174,7 +174,7 @@ namespace Telligent.Services.SamlAuthenticationPlugin
                 var persistClaims = new Property("persistClaims", "Persist Claims", PropertyType.Bool, 70, "false") { DescriptionText = "If checked, the claim collection will be stored in the database and be avaiable durning non login events." };
                 groups[3].Properties.Add(persistClaims);
 
-                var seureCookie = new Property("seureCookie", "Force HTTPS", PropertyType.Bool, 80, "true") { DescriptionText = "If checked, saml token data will be passed using a secure only (https cookie) uncheck only if your site doesnt support HTTPS (less secure)." };
+                var seureCookie = new Property("secureCookie", "Force HTTPS", PropertyType.Bool, 80, "true") { DescriptionText = "If checked, saml token data will be passed using a secure only (https cookie) uncheck only if your site doesnt support HTTPS (less secure)." };
                 groups[3].Properties.Add(seureCookie);
 
 
@@ -585,7 +585,7 @@ namespace Telligent.Services.SamlAuthenticationPlugin
                 //if the user already exists we can distroy the cached saml reference at this time
                 //in fact the only reason to keep a copy is so we can update persistant storage after the user is created
                 if (samlTokenData.IsExistingUser() || !this.PersistClaims)
-                    SamlTokenData.DistroySecureCookie(tokenKey);
+                    CookieHelper.DeleteCookie(tokenKey);
 
                 //this object is stored in temporary storage by the oauth handler, its guid is placed into the return url into the "TOKEN" placeholder.
                 //the expectation of this processing is the return url at this time is to the login page, and that any login based return url should be double encoded
