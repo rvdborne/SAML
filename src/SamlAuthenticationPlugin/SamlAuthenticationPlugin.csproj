@@ -115,6 +115,7 @@
     <Compile Include="Components\AuthnBinding.cs" />
     <Compile Include="Components\CleanThumbprintRule.cs" />
     <Compile Include="Components\CodeBasedIssuerNameRegistry.cs" />
+    <Compile Include="Components\CookieHelper.cs" />
     <Compile Include="Components\EmbeddedResources.cs" />
     <Compile Include="Components\LogoutUrlBehavior.cs" />
     <Compile Include="Components\RequestTypeHandlerMethodConstraint.cs" />

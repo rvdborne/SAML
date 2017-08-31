@@ -163,7 +163,7 @@ namespace Telligent.Services.SamlAuthenticationPlugin.Components
         }
 
 
-        internal Guid SaveToSecureCookie()
+        internal string SaveToSecureCookie()
         {
             var tokenKey = Guid.NewGuid();
             string samlXml = SamlHelpers.ConvertToString(this);
@@ -173,17 +173,17 @@ namespace Telligent.Services.SamlAuthenticationPlugin.Components
             HttpCookie cookie = new HttpCookie(tokenKey.ToString(), encryptedToken);
             cookie.HttpOnly = true;
             cookie.Secure = HttpContext.Current.Request.IsSecureConnection;
-            
-            HttpContext.Current.Response.Cookies.Add(cookie);
 
-            return tokenKey;
+            CookieHelper.AddCookie(cookie);            
+
+            return tokenKey.ToString();
         }
 
         internal static SamlTokenData GetFromSecureCookie(string tokenKey)
         {
             try
             {
-                HttpCookie secureCookie = HttpContext.Current.Request.Cookies[tokenKey];
+                HttpCookie secureCookie = CookieHelper.GetCookie(tokenKey);
                 var samlXml = SamlHelpers.Unprotect(secureCookie.Value, typeof(SamlTokenData).Name);
                 var samlTokenData = SamlHelpers.Deserialize<SamlTokenData>(samlXml);
                 return samlTokenData;
@@ -193,22 +193,7 @@ namespace Telligent.Services.SamlAuthenticationPlugin.Components
                 Apis.Get<IEventLog>().Write("Error Extracting SAML token from cookie:" + ex, new EventLogEntryWriteOptions { Category = "SAML", EventType = "Error", EventId = 1001 });
             }
             return null;
-        }
-
-        internal static void DistroySecureCookie(string tokenKey)
-        {
-
-            HttpCookie secureCookie = HttpContext.Current.Request.Cookies[tokenKey];
-            if (secureCookie != null)
-            {
-                HttpContext.Current.Response.Cookies.Remove(tokenKey);
-                secureCookie.Expires = DateTime.Now.AddDays(-1);
-                secureCookie.Value = null;
-                HttpContext.Current.Response.SetCookie(secureCookie);
-            }
- 
-        }
-
+        }        
     }
 
 }

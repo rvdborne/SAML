@@ -66,7 +66,7 @@ namespace Telligent.Services.SamlAuthenticationPlugin.Components
                 var queryString = HttpUtility.ParseQueryString(oAuthUrl.Query);
 
                 queryString.Add("type", samlPlugin.ClientType);
-                queryString.Add(SamlOAuthClient.oauthTokeyQuerystringKey, tokenKey.ToString());
+                queryString.Add(SamlOAuthClient.oauthTokeyQuerystringKey, tokenKey);
 
                 //Invitation Key
                 string invitationKey = SamlHelpers.GetInvitationKey();
