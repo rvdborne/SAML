@@ -95,8 +95,12 @@ namespace Telligent.Services.SamlAuthenticationPlugin.Components
             }
             else if (SamlHelpers.IsSignOutResponse)
             {
-                Telligent.Common.Services.Get<Telligent.Evolution.VelocityExtensions.Authentication>().Logout();
-                //context.Response.Redirect(SiteUrls.Instance().Home, true);
+                var platformLogout = PluginManager.GetSingleton<IPlatformLogout>();
+                if (platformLogout == null || !platformLogout.Enabled)
+                    throw new NotSupportedException("Unable to support WSFederation logouts without an appropriate IPlatformLogout plugin");
+
+                platformLogout.Logout();
+
                 context.Response.Clear();
                 context.Response.Buffer = true;
                 // Read the original file from disk

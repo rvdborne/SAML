@@ -22,6 +22,7 @@ Logout
 - Internal (local forms authentication logout)
 - External (logout preformed by external URL; must destroy the forms auth cookie or call ~/samllogout)
 - IFrame (logout form calls into remote url to log out of IDP)
+- WSFederation Signout (requires a custom IPlatformLogout extension)
 
 To use this plugin, your SAML token must support the following claims (exact claim paths can be configured  in the plugin)
 - Username (must be unique)
@@ -87,7 +88,7 @@ If you are required to manually run the sql schema updates, be sure to use a ver
 3. Restart your Job Scheduler Service.
 
 #### User Management
-If you have existing users in your database or create users outside of the SAML workflow (e.g., via the Administration area or REST) those Users will need to know the username and password used to create the account so they are able to link their Telligent user with their SAML user identity.
+If you have existing users in your database or create users outside of the SAML workflow (e.g., via the Administration area or REST) those Users will need to know the username and password used to create the account so they are able to link their Telligent user with their SAML user identity. (To support this ability users need a custom ISamlOAuthLinkManager extension)
 
 #### Version History
 Version 3.0 - Initial GitHub Release
