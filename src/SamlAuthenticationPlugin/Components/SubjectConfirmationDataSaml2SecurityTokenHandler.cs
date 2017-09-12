@@ -1,11 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.IdentityModel.Tokens;
-using System.Linq;
-using System.Security.Claims;
-using System.ServiceModel.Security;
-using System.Text;
 using System.Web;
 
 namespace Telligent.Services.SamlAuthenticationPlugin.Components

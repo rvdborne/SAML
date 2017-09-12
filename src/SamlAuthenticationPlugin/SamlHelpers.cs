@@ -1,18 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
-using System.Diagnostics;
-using System.Linq;
 using System.Security.Claims;
-using System.Security.Principal;
 using System.Text;
-using System.Threading.Tasks;
 using System.Web;
 using System.Web.Security;
 using System.Web.UI;
 using System.Xml;
 using System.Xml.Serialization;
-using Telligent.Evolution.Api.Services;
 using Telligent.Evolution.Extensibility.Api.Version1;
 using Telligent.Services.SamlAuthenticationPlugin.Components;
 using System.IO;
@@ -32,7 +27,21 @@ namespace Telligent.Services.SamlAuthenticationPlugin
             get
             {
                 var request = HttpContext.Current.Request;
-                if (request == null || request.Form == null || request.Form["SAMLResponse"] == null)
+                if (request == null || request.Form == null || (request.Form["SAMLResponse"] == null
+                    && !(request.Form["wresult"] != null && request.Form["wa"] != null && request.Form["wa"].Equals("wsignin1.0", StringComparison.InvariantCultureIgnoreCase))))
+                {
+                    return false;
+                }
+                return true;
+            }
+        }
+
+        public static bool IsSignOutResponse
+        {
+            get
+            {
+                var request = HttpContext.Current.Request;
+                if (request == null || request.QueryString == null || request.QueryString["wa"] == null || !request.QueryString["wa"].Equals("wsignoutcleanup1.0", StringComparison.InvariantCultureIgnoreCase))
                 {
                     return false;
                 }
@@ -47,7 +56,7 @@ namespace Telligent.Services.SamlAuthenticationPlugin
                 if (IsSignInResponse)
                 {
                     var request = HttpContext.Current.Request;
-                    string xmlTokenFromMessage =
+                    string xmlTokenFromMessage =request.Form["wresult"] ??
                        Encoding.UTF8.GetString(
                            Convert.FromBase64String(request.Form["SAMLResponse"]));
 

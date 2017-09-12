@@ -1,21 +1,12 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.IdentityModel.Services;
-using System.IdentityModel.Tokens;
 using System.IO;
 using System.IO.Compression;
-using System.Linq;
-using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using System.Security.Cryptography.Xml;
-using System.ServiceModel;
-using System.Text;
-using System.Threading.Tasks;
 using System.Web;
 using System.Xml;
 using Telligent.Evolution.Extensibility.Api.Version1;
-using Telligent.Evolution.Extensibility.Security.Version1;
 using Telligent.Evolution.Extensibility.Version1;
 
 namespace Telligent.Services.SamlAuthenticationPlugin.Components
@@ -25,7 +16,7 @@ namespace Telligent.Services.SamlAuthenticationPlugin.Components
     {
         private const string SamlRequestTemplate = "<samlp:AuthnRequest ID=\"{0}\" Version=\"2.0\" IssueInstant=\"{1}\" Destination=\"{2}\" Consent=\"urn:oasis:names:tc:SAML:2.0:consent:unspecified\" xmlns:samlp=\"urn:oasis:names:tc:SAML:2.0:protocol\"><saml:Issuer xmlns:saml=\"urn:oasis:names:tc:SAML:2.0:assertion\">{3}</saml:Issuer><samlp:NameIDPolicy AllowCreate=\"true\" /></samlp:AuthnRequest>";
         //note old code had this in place of "Consent" ForceAuthn="false" IsPassive="false" ProtocolBinding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST" AssertionConsumerServiceURL="{url that accepts saml tokens}"
-
+        private const string WsFederationSignInTemplate = "{0}?wa=wsignin1.0&wtrealm={1}&wreply={2}";
         private const string SamlHandlerContent = "<html><head><title>Working...</title></head><body><form method='POST' name='hiddenform' action='{0}'><input type='hidden' name='SAMLRequest' value='{1}' /><noscript><p>Script is disabled. Click Submit to continue.</p><input type='submit' value='Submit' /></noscript></form><script language='javascript'>window.setTimeout('document.forms[0].submit()', 0);</script></body></html>";
 
 
@@ -77,12 +68,17 @@ namespace Telligent.Services.SamlAuthenticationPlugin.Components
             var issuerUrl = PublicApi.Url.Absolute(PublicApi.CoreUrls.Home());
 
 
-            if (samlPlugin.IdpBindingType == SamlBinding.SAML11_POST && samlPlugin.IdpAuthRequestType != AuthnBinding.IDP_Initiated)
-                throw new NotSupportedException("Only bare get requests (without querystring or signature) are supported by the SAML 11 AuthN handler at this time");
+            //if (samlPlugin.IdpBindingType == SamlBinding.SAML11_POST && (samlPlugin.IdpAuthRequestType != AuthnBinding.IDP_Initiated) || (samlPlugin.IdpAuthRequestType != AuthnBinding.WSFededation))
+            //    throw new NotSupportedException("Only bare get requests (without querystring or signature) are supported by the SAML 11 AuthN handler at this time");
 
 
             switch(samlPlugin.IdpAuthRequestType)
             {
+                case AuthnBinding.WSFededation:
+                    context.Response.Redirect(string.Format(WsFederationSignInTemplate, samlPlugin.IdpUrl, Telligent.Evolution.Components.Globals.FullPath("~/"), Telligent.Evolution.Components.Globals.FullPath("~/samlresponse")));
+                    HttpContext.Current.ApplicationInstance.CompleteRequest();
+                    break;
+
                 case AuthnBinding.IDP_Initiated:
                     context.Response.Redirect(samlPlugin.IdpUrl, false);
                     HttpContext.Current.ApplicationInstance.CompleteRequest();

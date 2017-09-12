@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace Telligent.Services.SamlAuthenticationPlugin.Components
+﻿namespace Telligent.Services.SamlAuthenticationPlugin.Components
 {
     public enum AuthnBinding
     {
@@ -13,5 +7,6 @@ namespace Telligent.Services.SamlAuthenticationPlugin.Components
         POST = 4,
         SignedRedirect = 8,
         SignedPOST = 16,
+        WSFededation = 32
     }
 }

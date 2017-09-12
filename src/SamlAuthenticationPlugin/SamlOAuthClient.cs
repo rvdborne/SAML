@@ -143,6 +143,7 @@ namespace Telligent.Services.SamlAuthenticationPlugin
                 //idpAuthRequestType.SelectableValues.Add(new PropertyValue(AuthnBinding.SignedRedirect.ToString(), AuthnBinding.SignedRedirect.ToString(), 3));  //not yet supported
                 idpAuthRequestType.SelectableValues.Add(new PropertyValue(AuthnBinding.POST.ToString(), AuthnBinding.POST.ToString(), 4));
                 idpAuthRequestType.SelectableValues.Add(new PropertyValue(AuthnBinding.SignedPOST.ToString(), AuthnBinding.SignedPOST.ToString(), 5));
+                idpAuthRequestType.SelectableValues.Add(new PropertyValue(AuthnBinding.WSFededation.ToString(), AuthnBinding.WSFededation.ToString(), 6));
                 groups[1].Properties.Add(idpAuthRequestType);
 
                 var authThumbprint = new Property("authThumbprint", "AuthN Certificate Thumbprint", PropertyType.String, 110, _authThumbprintDefault) { DescriptionText = "The Thumbprint of a private key located in the localmachine/personal store, for which the applicaiton pool user has been given permissions; required for signed AuthN request types" };
@@ -286,6 +287,14 @@ namespace Telligent.Services.SamlAuthenticationPlugin
         {
             get
             {
+                if (IdpAuthRequestType == AuthnBinding.WSFededation)
+                {
+                    //var context = HttpContext.Current;
+                    //if (LogoutUrlBehavior == LogoutUrlBehavior.EXTERNAL && context != null && context.Request != null && context.Request.QueryString["wa"] != null && context.Request.QueryString["wa"].Equals("wsignout1.0", StringComparison.InvariantCultureIgnoreCase))
+                    //    return string.Empty;
+                    return string.Format("{0}?wa=wsignout1.0", IdpUrl);
+                }
+
                 return Configuration.GetString("logoutUrl");
             }
         }
@@ -492,8 +501,15 @@ namespace Telligent.Services.SamlAuthenticationPlugin
         {
             get
             {
+                //Identity server (wsfed?wa=signout1.0) sends request "samlresponse/wa=wsignoutcleanup1.0"(passive logout) and after that we should just reload page
+                if (LogoutUrlBehavior == LogoutUrlBehavior.IFRAME && IdpAuthRequestType== AuthnBinding.WSFededation)
+                    return String.Format(@"<div style=""display:none""><iframe id=""saml-logout"" width=""0"" height=""0"" src=""{0}"" onload=""window.location.reload();""></iframe></div>", IdpLogoutUrl);
+
                 if (LogoutUrlBehavior == LogoutUrlBehavior.IFRAME)
                     return String.Format(@"<div style=""display:none""><iframe id=""saml-logout"" width=""0"" height=""0"" src=""{0}"" onload=""jQuery(document).trigger('oauthsignout');""></iframe></div>", IdpLogoutUrl);
+
+                if (LogoutUrlBehavior == LogoutUrlBehavior.EXTERNAL && IdpAuthRequestType == AuthnBinding.WSFededation && !string.IsNullOrWhiteSpace(IdpLogoutUrl))
+                    return String.Format(@"<script type='text/javascript'>window.location='{0}&wreply={1}';</script>", IdpLogoutUrl, Telligent.Evolution.Components.Globals.FullPath("~/logout"));
 
                 return string.Empty;
             }

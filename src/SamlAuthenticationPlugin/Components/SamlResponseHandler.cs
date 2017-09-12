@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Web;
 using Telligent.Evolution.Extensibility.Api.Version1;
 using Telligent.Services.SamlAuthenticationPlugin.Extensibility;
@@ -64,7 +65,7 @@ namespace Telligent.Services.SamlAuthenticationPlugin.Components
                 var queryString = HttpUtility.ParseQueryString(oAuthUrl.Query);
 
                 queryString.Add("type", samlPlugin.ClientType);
-                queryString.Add(SamlOAuthClient.oauthTokeyQuerystringKey, tokenKey);
+                queryString.Add(SamlOAuthClient.oauthTokeyQuerystringKey, tokenKey.ToString());
 
                 //Invitation Key
                 string invitationKey = SamlHelpers.GetInvitationKey();
@@ -91,6 +92,30 @@ namespace Telligent.Services.SamlAuthenticationPlugin.Components
                 context.ApplicationInstance.CompleteRequest();
                 context.Response.End();
 
+            }
+            else if (SamlHelpers.IsSignOutResponse)
+            {
+                Telligent.Common.Services.Get<Telligent.Evolution.VelocityExtensions.Authentication>().Logout();
+                //context.Response.Redirect(SiteUrls.Instance().Home, true);
+                context.Response.Clear();
+                context.Response.Buffer = true;
+                // Read the original file from disk
+                Stream myFileStream = EmbeddedResources.GetStream("Telligent.Services.SamlAuthenticationPlugin.Resources.Images.oauth.gif");
+                long FileSize = myFileStream.Length;
+                byte[] Buffer = new byte[(int)FileSize];
+                myFileStream.Read(Buffer, 0, (int)FileSize);
+                myFileStream.Close();
+
+                // Tell the browse stuff about the file
+                context.Response.AddHeader("Content-Length", FileSize.ToString());
+                context.Response.AddHeader("Content-Disposition", "inline; filename=oauth.gif");
+                context.Response.ContentType = "image/gif";
+
+                // Send the data to the browser
+                context.Response.BinaryWrite(Buffer);
+                context.ApplicationInstance.CompleteRequest();
+                context.Response.End();
+                return;
             }
 
             //if this is not a sign-in response, we should probably redirect to login.aspx

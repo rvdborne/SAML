@@ -1,6 +1,6 @@
 # SAML Authentication Plugin
 
-Plugin Version 3.0 compatible with Telligent Community 7.x and Up
+Plugin Version 4.0 compatible with Telligent Community 7.x and Up
 
 #### What is the SAML Authentication Plugin
 
@@ -87,3 +87,7 @@ If you are required to manually run the sql schema updates, be sure to use a ver
 
 #### User Management
 If you have existing users in your database or create users outside of the SAML workflow (e.g., via the Administration area or REST) those Users will need to know the username and password used to create the account so they are able to link their Telligent user with their SAML user identity.
+
+#### Version History
+Version 3.0 - Initial GitHub Release
+Version 4.0 - Add support for WSFederation AuthN and Logout
