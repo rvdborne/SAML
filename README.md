@@ -1,6 +1,6 @@
 # SAML Authentication Plugin
 
-Plugin Version 4.0 compatible with Telligent Community 7.x and Up
+Plugin Version 4.0 compatible with Telligent Community 7.x through Telligent Community 9.x
 
 #### What is the SAML Authentication Plugin
 
@@ -16,6 +16,7 @@ SAML AuthN support
 - IDP Initiated
 - Redirect / HTTP GET (XML signatures not supported in current code)
 - HTTP POST (with optional XML signature)
+- WSFederation
 
 Logout
 - Internal (local forms authentication logout)
@@ -73,7 +74,7 @@ If you are required to manually run the sql schema updates, be sure to use a ver
 2. Place a check mark next to the **SAML Authentication OAuth Client** plugin, and click **Save**.
 3. Click Configure.  
 
-[//]: # (TODO Configuration Information)
+[//]: # "TODO Configuration Information"
 
 > Enabling the "SAML Authentication OAuth Client" plugin updates the database schema (if required) and adds the SAML Authentication OAuth Client widgets to site’s pages and Adds the SAML Authentication OAuth Client Widgets to the site. Server and/or browser caching may prevent these changes from being seen immediately. After enabling the plugin, restarting the Web site and/or clearing the browser cache should make the SAML Authentication OAuth Client functionality appear immediately.
 
@@ -90,4 +91,7 @@ If you have existing users in your database or create users outside of the SAML 
 
 #### Version History
 Version 3.0 - Initial GitHub Release
+
 Version 4.0 - Add support for WSFederation AuthN and Logout
+
+Version 4.7 - update minor build number to indicate build was for 7x compatibility from the Telligent7 Branch  (4.7 is fully backward compatible with version 3 of this assembly)
