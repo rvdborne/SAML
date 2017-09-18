@@ -6,6 +6,7 @@ using System.Security.Cryptography.X509Certificates;
 using System.Security.Cryptography.Xml;
 using System.Web;
 using System.Xml;
+using Telligent.Evolution.Extensibility;
 using Telligent.Evolution.Extensibility.Api.Version1;
 using Telligent.Evolution.Extensibility.Version1;
 
@@ -56,7 +57,7 @@ namespace Telligent.Services.SamlAuthenticationPlugin.Components
             }
             catch (Exception ex)
             {
-                PublicApi.Eventlogs.Write("Error Creating SAML return URL cookie:" + ex.ToString(), new EventLogEntryWriteOptions(){ Category= "SAML", EventType= "Error", EventId = 1000});
+                Apis.Get<IEventLog>().Write("Error Creating SAML return URL cookie:" + ex, new EventLogEntryWriteOptions{ Category= "SAML", EventType= "Error", EventId = 1000});
             }
 
 
@@ -65,7 +66,7 @@ namespace Telligent.Services.SamlAuthenticationPlugin.Components
                 throw new InvalidOperationException("Unable to load the SamlAuthentication plugin; saml logins are not supported in the current configuration");
 
             var requestId = "_" + Guid.NewGuid().ToString();
-            var issuerUrl = PublicApi.Url.Absolute(PublicApi.CoreUrls.Home());
+            var issuerUrl = Apis.Get<IUrl>().Absolute(Apis.Get<ICoreUrls>().Home());
 
 
             //if (samlPlugin.IdpBindingType == SamlBinding.SAML11_POST && (samlPlugin.IdpAuthRequestType != AuthnBinding.IDP_Initiated) || (samlPlugin.IdpAuthRequestType != AuthnBinding.WSFededation))
@@ -293,11 +294,12 @@ namespace Telligent.Services.SamlAuthenticationPlugin.Components
 
         private bool IsValidReturnUrl(string returnUrl)
         {
+            var apiCoreUrls = Apis.Get<ICoreUrls>();
             if (!string.IsNullOrEmpty(returnUrl)
                 && !(
                         returnUrl.IndexOf("MessageID") != -1
-                        || returnUrl.IndexOf(PublicApi.CoreUrls.Banned()) != -1
-                        || returnUrl.IndexOf(PublicApi.CoreUrls.NotFound()) != -1
+                        || returnUrl.IndexOf(apiCoreUrls.Banned()) != -1
+                        || returnUrl.IndexOf(apiCoreUrls.NotFound()) != -1
                         || returnUrl.IndexOf("changepassword") != -1
                         || returnUrl.IndexOf("emailforgottenpassword") != -1
                         || returnUrl.IndexOf("/samlauthn") != -1

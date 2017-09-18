@@ -6,6 +6,7 @@ using System.IO;
 using System.Security.Claims;
 using System.ServiceModel.Security;
 using System.Xml;
+using Telligent.Evolution.Extensibility;
 using Telligent.Evolution.Extensibility.Api.Version1;
 using Telligent.Evolution.Extensibility.Version1;
 using Telligent.Services.SamlAuthenticationPlugin.Extensibility;
@@ -33,6 +34,7 @@ namespace Telligent.Services.SamlAuthenticationPlugin.Components
             var dispalyNameGenerator = PluginManager.GetSingleton<ISamlDisplayNameGenerator>();
             var usernameGenerator = PluginManager.GetSingleton<ISamlUsernameGenerator>();
             var samlTokenValidator = PluginManager.GetSingleton<ISamlTokenDataValidator>();
+            var apiUsers = Apis.Get<IUsers>();
 
             //Extracts, validates and returns the assertion nodes from the current context samlResponse
             SecurityToken samlToken = GetAssertion();
@@ -63,14 +65,14 @@ namespace Telligent.Services.SamlAuthenticationPlugin.Components
 
 
             //look up the user by username.
-            var user = PublicApi.Users.Get(new UsersGetOptions() { Username = samlTokenData.UserName });
+            var user = apiUsers.Get(new UsersGetOptions() { Username = samlTokenData.UserName });
             if (user != null && !user.HasErrors() && user.Id.HasValue)
                 userID = user.Id.Value;
 
             if (userID == 0 && tokenProcessorConfiguration.AllowTokenMatchingByEmailAddress)
             {
                 // look up the user by email address
-                user = PublicApi.Users.Get(new UsersGetOptions() { Email = samlTokenData.Email.ToLower() });
+                user = apiUsers.Get(new UsersGetOptions() { Email = samlTokenData.Email.ToLower() });
                 if (user != null && !user.HasErrors() && user.Id.HasValue)
                     userID = user.Id.Value;
             }

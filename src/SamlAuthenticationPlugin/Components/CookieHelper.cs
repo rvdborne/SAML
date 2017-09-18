@@ -43,8 +43,8 @@ namespace Telligent.Services.SamlAuthenticationPlugin.Components
             {
                 if (CookieCutter.IsCutCookie(cookie))
                     return CookieCutter.GetUnCutCookie(cookie);
-                else
-                    return cookie;
+                
+                return cookie;
             }
 
             return null;
@@ -62,7 +62,6 @@ namespace Telligent.Services.SamlAuthenticationPlugin.Components
 
         public static bool IsCutCookie(HttpCookie cookie)
         {
-            bool isCut = false;
             int cuts = 0;
 
             return int.TryParse(cookie[cookieCutsKey], out cuts);

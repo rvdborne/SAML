@@ -8,10 +8,12 @@ using System.Web.Security;
 using System.Web.UI;
 using System.Xml;
 using System.Xml.Serialization;
+using Telligent.Evolution.Api.Services;
 using Telligent.Evolution.Extensibility.Api.Version1;
 using Telligent.Services.SamlAuthenticationPlugin.Components;
 using System.IO;
 using System.Globalization;
+using Telligent.Evolution.Extensibility;
 
 namespace Telligent.Services.SamlAuthenticationPlugin
 {
@@ -211,7 +213,7 @@ namespace Telligent.Services.SamlAuthenticationPlugin
             }
             catch (Exception ex)
             {
-                PublicApi.Eventlogs.Write(string.Format("ERROR trying to extract key {0} from return url provided:{1} - {2}" , key, urlFragment, ex.ToString()), new EventLogEntryWriteOptions() { Category="SAML", EventId=6018, EventType="Error" });
+                Apis.Get<IEventLog>().Write(string.Format("ERROR trying to extract key {0} from return url provided:{1} - {2}" , key, urlFragment, ex.ToString()), new EventLogEntryWriteOptions() { Category="SAML", EventId=6018, EventType="Error" });
             }
 
             return null;
@@ -234,7 +236,7 @@ namespace Telligent.Services.SamlAuthenticationPlugin
             }
             catch (Exception ex) 
             {
-                PublicApi.Eventlogs.Write("ERROR trying to extract Invitation from cookie:" + ex.ToString(), new EventLogEntryWriteOptions() { Category = "SAML", EventId = 6019, EventType = "Error" });
+                Apis.Get<IEventLog>().Write("ERROR trying to extract Invitation from cookie:" + ex.ToString(), new EventLogEntryWriteOptions() { Category = "SAML", EventId = 6019, EventType = "Error" });
             }
 
             return null;
@@ -274,7 +276,7 @@ namespace Telligent.Services.SamlAuthenticationPlugin
             {
 
                 //check to see that the invitation is present and valid
-                var invite = PublicApi.UserInvitations.Get(invitationKey);
+                var invite = Apis.Get<IUserInvitations>().Get(invitationKey);
                 if(invite != null)
                     return !invite.HasErrors();
 

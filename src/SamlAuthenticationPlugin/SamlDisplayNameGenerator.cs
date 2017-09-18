@@ -14,7 +14,36 @@ namespace Telligent.Services.SamlAuthenticationPlugin
             if (samlTokenData == null)
                 return null;
 
-            var displayName = samlTokenData.GetAttribute(DisplayNameAttribute);
+            var displayName = string.Empty;
+            if (DisplayNameAttribute.Contains("}"))
+            {
+                var displayNameParts = DisplayNameAttribute.Split('{', '}');
+                bool foundAttribute = false;
+                string templatedDisplayName = string.Empty;
+                foreach (var displayNamePart in displayNameParts)
+                {
+                    if (DisplayNameAttribute.Contains(string.Concat("{", displayNamePart, "}")))
+                    {
+                        var attribute = samlTokenData.GetAttribute(displayNamePart);
+                        if(!string.IsNullOrEmpty(attribute))
+                        {
+                            foundAttribute = true;
+                            templatedDisplayName = templatedDisplayName + attribute;
+                        }
+                    }
+                    else
+                    {
+                        templatedDisplayName = templatedDisplayName + displayNamePart;
+                    }
+                }
+                if (foundAttribute) //only use this display name if we managed to find at least one saml attribute
+                    displayName = templatedDisplayName;
+            }
+            else
+            {
+                displayName = samlTokenData.GetAttribute(DisplayNameAttribute);
+            }
+
             if (!string.IsNullOrEmpty(displayName))
                 samlTokenData.CommonName = displayName;
 
@@ -87,7 +116,7 @@ namespace Telligent.Services.SamlAuthenticationPlugin
                 PropertyGroup[] groups = new[] { new PropertyGroup("options", "Options", 0) };
 
 
-                var displayNameClaim = new Property("DisplayNameAttribute", "Display Name Attribute Name", PropertyType.String, 1, "displayname") { DescriptionText = "The name saml attribute containing the display name for a user. (Used for account auto-creation.)" }; ;
+                var displayNameClaim = new Property("DisplayNameAttribute", "Display Name Attribute Name", PropertyType.String, 1, "displayname") { DescriptionText = "The name saml attribute containing the display name for a user. (Used for account auto-creation.  Will replace claims in {first} {last} syntax to parse a pattern)" }; ;
                 displayNameClaim.Rules.Add(new PropertyRule(typeof(Telligent.Evolution.Controls.PropertyRules.TrimStringRule), false));
                 groups[0].Properties.Add(displayNameClaim);
 

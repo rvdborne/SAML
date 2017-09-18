@@ -1,9 +1,10 @@
 ﻿using System;
 using System.IO;
 using System.Web;
+using Telligent.Evolution.Extensibility;
 using Telligent.Evolution.Extensibility.Api.Version1;
+using Telligent.Evolution.Extensibility.Version1;
 using Telligent.Services.SamlAuthenticationPlugin.Extensibility;
-using PluginManager = Telligent.Evolution.Extensibility.Version1.PluginManager;
 
 namespace Telligent.Services.SamlAuthenticationPlugin.Components
 {
@@ -11,7 +12,7 @@ namespace Telligent.Services.SamlAuthenticationPlugin.Components
     {
         #region IHttpHandler Members
 
-        public bool IsReusable { get { return true; } }
+        public bool IsReusable => true;
 
         public void ProcessRequest(HttpContext context)
         {
@@ -95,8 +96,12 @@ namespace Telligent.Services.SamlAuthenticationPlugin.Components
             }
             else if (SamlHelpers.IsSignOutResponse)
             {
-                Telligent.Common.Services.Get<Telligent.Evolution.VelocityExtensions.Authentication>().Logout();
-                //context.Response.Redirect(SiteUrls.Instance().Home, true);
+                var platformLogout = PluginManager.GetSingleton<IPlatformLogout>();
+                if (platformLogout == null || !platformLogout.Enabled)
+                    throw new NotSupportedException("Unable to support WSFederation logouts without an appropriate IPlatformLogout plugin");
+
+                platformLogout.Logout();
+
                 context.Response.Clear();
                 context.Response.Buffer = true;
                 // Read the original file from disk
@@ -132,7 +137,7 @@ namespace Telligent.Services.SamlAuthenticationPlugin.Components
 
             if (string.IsNullOrEmpty(returnUrl))
             {
-                returnUrl = PublicApi.Url.Absolute(PublicApi.CoreUrls.Home());
+                returnUrl = Apis.Get<IUrl>().Absolute(Apis.Get<ICoreUrls>().Home());
             }
 
             return returnUrl;
