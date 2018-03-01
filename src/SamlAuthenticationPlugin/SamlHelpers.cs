@@ -433,6 +433,5 @@ namespace Telligent.Services.SamlAuthenticationPlugin
             }
             return string.Concat(url, seperator, querystring);
         }
-
     }
 }

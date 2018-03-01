@@ -76,7 +76,7 @@ namespace Telligent.Services.SamlAuthenticationPlugin.Components
             switch(samlPlugin.IdpAuthRequestType)
             {
                 case AuthnBinding.WSFededation:
-                    context.Response.Redirect(string.Format(WsFederationSignInTemplate, samlPlugin.IdpUrl, HttpUtility.UrlEncode(Telligent.Evolution.Components.Globals.FullPath("~/")), HttpUtility.UrlEncode(Telligent.Evolution.Components.Globals.FullPath("~/samlresponse"))));
+                    context.Response.Redirect(string.Format(WsFederationSignInTemplate, samlPlugin.IdpUrl, HttpUtility.UrlEncode(Apis.Get<IUrl>().Absolute("~/")), HttpUtility.UrlEncode(Apis.Get<IUrl>().Absolute("~/samlresponse"))));
                     HttpContext.Current.ApplicationInstance.CompleteRequest();
                     break;
 

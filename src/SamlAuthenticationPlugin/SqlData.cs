@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Configuration;
 using System.Data;
 using System.Data.SqlClient;
-using Telligent.Evolution.Components;
 using Telligent.Evolution.Extensibility;
 using Telligent.Evolution.Extensibility.Api.Version1;
 using Telligent.Services.SamlAuthenticationPlugin.Components;
@@ -192,7 +191,7 @@ namespace Telligent.Services.SamlAuthenticationPlugin
         #endregion
 
 
-        private static int DeleteSamlTokenData(int userId)
+        public static int DeleteSamlTokenData(int userId)
         {
             using (SqlConnection myConnection = GetSqlConnection())
             {

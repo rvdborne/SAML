@@ -45,6 +45,7 @@ namespace Telligent.Services.SamlAuthenticationPlugin.Components
             samlTokenData.NameId = samlTokenData.ClientId = GetNameId(samlToken);
             samlTokenData.Email = samlTokenData.GetAttribute(tokenProcessorConfiguration.EmailAttributeName, null);
 
+            //check if we have a custom user name plugin and execute it now to populate the UserName attribue
             if (usernameGenerator != null && usernameGenerator.Enabled)
                 samlTokenData = usernameGenerator.GenerateUsername(samlTokenData);
             else
