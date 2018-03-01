@@ -404,7 +404,7 @@ namespace Telligent.Services.SamlAuthenticationPlugin
 	                    [UserId] ASC,
 						[ClientId] ASC
                     ) ON [PRIMARY],
-                    UNIQUE NONCLUSTERED 
+                    CONSTRAINT [UC_db_SamlTokenStore_ClientId] UNIQUE NONCLUSTERED 
                     (
                         [ClientId] ASC
                     ) ON [PRIMARY]);CREATE INDEX [IX_db_SamlTokenStore_UserId] ON [{0}].[db_SamlTokenStore]
