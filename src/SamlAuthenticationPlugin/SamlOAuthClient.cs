@@ -43,6 +43,10 @@ namespace Telligent.Services.SamlAuthenticationPlugin
         private const bool _allowTokenMatchingByEmailAddressDefault = true;
         private const bool _allowAutoUserRegistrationDefault = true;
         internal const string oauthTokeyQuerystringKey = "saml_data_token_key";
+        private IEventLog _eventLogApi;
+        private IUsers _usersApi;
+        private IUrl _urlApi;
+        private ICoreUrls _coreUrlsApi;
 
         #endregion
 
@@ -61,14 +65,19 @@ namespace Telligent.Services.SamlAuthenticationPlugin
 
         public void Initialize()
         {
+            _eventLogApi = Apis.Get<IEventLog>();
+            _usersApi = Apis.Get<IUsers>();
+            _urlApi = Apis.Get<IUrl>();
+            _coreUrlsApi = Apis.Get<ICoreUrls>();
+
             //hook the user created event to save SAML token data (from secure cookie if persist flag is set) for new users
-            Apis.Get<IUsers>().Events.AfterCreate += new UserAfterCreateEventHandler(Events_AfterUserCreate);
+            _usersApi.Events.AfterCreate += new UserAfterCreateEventHandler(Events_AfterUserCreate);
 
             //hook to create custom user authenticated event
-            Apis.Get<IUsers>().Events.AfterIdentify += new UserAfterIdentifyEventHandler(Events_AfterIdentify);
+            _usersApi.Events.AfterIdentify += new UserAfterIdentifyEventHandler(Events_AfterIdentify);
 
             //cleanup persistant storage when a user is deleted
-            Apis.Get<IUsers>().Events.AfterDelete += new UserAfterDeleteEventHandler(Events_AfterUserDelete);
+            _usersApi.Events.AfterDelete += new UserAfterDeleteEventHandler(Events_AfterUserDelete);
 
         }
 
@@ -191,9 +200,8 @@ namespace Telligent.Services.SamlAuthenticationPlugin
                 var persistClaims = new Property("persistClaims", "Persist Claims", PropertyType.Bool, 70, "false") { DescriptionText = "If checked, the claim collection will be stored in the database and be avaiable durning non login events." };
                 groups[3].Properties.Add(persistClaims);
 
-                var seureCookie = new Property("secureCookie", "Force HTTPS", PropertyType.Bool, 80, "true") { DescriptionText = "If checked, saml token data will be passed using a secure only (https cookie) uncheck only if your site doesnt support HTTPS (less secure)." };
-                groups[3].Properties.Add(seureCookie);
-
+                var secureCookie = new Property("secureCookie", "Force HTTPS", PropertyType.Bool, 80, "true") { DescriptionText = "If checked, saml token data will be passed using a secure only (https cookie) uncheck only if your site doesnt support HTTPS (less secure)." };
+                groups[3].Properties.Add(secureCookie);
 
                 var iconUrl = new Property("iconUrl", "The URL for the OAuth image", PropertyType.String, 120, _iconUrlDefault) { DescriptionText = "overrides the built in SAML oauth image" };
                 iconUrl.Rules.Add(new PropertyRule(typeof(Telligent.Evolution.Controls.PropertyRules.TrimStringRule), false));
@@ -225,52 +233,84 @@ namespace Telligent.Services.SamlAuthenticationPlugin
             //also cleanup our afterCreatedCookie
             CookieHelper.DeleteCookie(afterCreatedCookie.Name);
 
-            //update the samlTokenData now that we know the user ID
+            //update the samlTokenData now that we know the user ID and cleanup the cookie used by the login
             samlTokenData.UserId = e.Id.Value;
+            CookieHelper.DeleteCookie(afterCreatedCookie.Value);
+
+            //Update the cookie SAMLToken Data to have the UserId now that its an existing user to fire the after authenticated events (which also removes the cookie)
+            var tokenKey = samlTokenData.SaveToSecureCookie();
+            HttpCookie afterAuthenticatedCookie = new HttpCookie(clientType, tokenKey);
+            afterAuthenticatedCookie.HttpOnly = true;
+            CookieHelper.AddCookie(afterAuthenticatedCookie);
 
             if (PersistClaims)
             {
                 SqlData.SaveSamlToken(samlTokenData);
             }
 
-            var apiUser = Apis.Get<IUsers>().Get(new UsersGetOptions() { Id = e.Id.Value });
+            var apiUser = _usersApi.Get(new UsersGetOptions() { Id = e.Id.Value });
 
             //raise new SamlUserCreated Event
-            SamlEvents.Instance.OnAfterUserCreate(apiUser, samlTokenData);
-
-            //create afterAthenticatedCookie to fire the AfterAuthenticated event on the next request
-            HttpCookie afterAuthenticatedCookie = new HttpCookie(clientType, samlTokenData.UserId.ToString());
-            afterAuthenticatedCookie.HttpOnly = true;
-            CookieHelper.AddCookie(afterAuthenticatedCookie);
-
+            try
+            {
+                SamlEvents.Instance.OnAfterUserCreate(apiUser, samlTokenData);
+            }
+            catch (Exception ex)
+            {
+                _eventLogApi.Write("SamlOAuthClient Error OnAfterUserCreate: " + ex.Message + " : " + ex.StackTrace, new EventLogEntryWriteOptions() { Category = "SAML", EventId = 1, EventType = "Error"  });
+            }
 
         }
 
         void Events_AfterIdentify(UserAfterIdentifyEventArgs e)
         {
+
             var context = HttpContext.Current;
             if (context == null) return;
             if (context.Request == null) return;
             if (!context.Request.IsAuthenticated) return;
 
             //filter some requests basic non UI requests
-            if (context.Request.RawUrl.StartsWith("/socket.ashx")) return;
-            if (context.Request.RawUrl.StartsWith("/api.ashx")) return;
+            if (context.Request.RawUrl.ToLower().StartsWith("/socket.ashx")) return;
+            if (context.Request.RawUrl.ToLower().StartsWith("/webresource.axd")) return;
+            if (context.Request.RawUrl.ToLower().StartsWith("/api.ashx")) return;
+            if (context.Request.RawUrl.ToLower().StartsWith("/utility/")) return;
+            if (context.Request.RawUrl.ToLower().StartsWith("/cfs-filesystemfile/")) return;
+            if (context.Request.RawUrl.ToLower().StartsWith("/dynamic-style")) return;
+            if (context.Request.RawUrl.ToLower().StartsWith("/favicon.ico")) return;
+            if (context.Request.RawUrl.ToLower().EndsWith(".css")) return;
 
             //check to see if our Oauth ProcessLogin() cookie exists
-            var afterAuthenticatedCookie = CookieHelper.GetCookie(SamlOAuthClient.clientType);
-            if (afterAuthenticatedCookie == null) return;
+            try
+            {
 
-            if (afterAuthenticatedCookie.Value != e.Id.Value.ToString()) return;  //check to see that the logged in user and ProcessLogin() user have the same ID;
-            CookieHelper.DeleteCookie(afterAuthenticatedCookie.Name);
+                var afterAuthenticatedCookie = CookieHelper.GetCookie(SamlOAuthClient.clientType);
+                if (afterAuthenticatedCookie == null) return;
 
-            //Get the API user and the last SAML token to keep things API friendly
-            var apiUser = Apis.Get<IUsers>().Get(new UsersGetOptions() { Id = e.Id.Value });
+                var samlTokenData = SamlTokenData.GetFromSecureCookie(afterAuthenticatedCookie.Value);
+                if (samlTokenData == null) return;
 
-            //requires that PersistData be set on the SAML token
-            var samlTokenData = SqlData.GetSamlTokenData(e.Id.Value);
 
-            SamlEvents.Instance.OnAfterAuthenticate(apiUser, samlTokenData);
+                //isexistinguser requires either new user or the saml token username is used to match (optionally lookup by email address)
+                //if usernames are auto generated and or email or username doesnt match then this event wont relyably fire
+                //unless running custom ISamlUserLookup manager code that can check the te_Oauth_Links table for existing associations to the nameid (contact telligent services for details)
+                if (!samlTokenData.IsExistingUser()) return;
+
+
+                if (samlTokenData.IsExistingUser() && samlTokenData.UserId != e.Id.Value) return;  //check to see that the logged in user and ProcessLogin() user have the same ID;
+
+                CookieHelper.DeleteCookie(afterAuthenticatedCookie.Value);
+                CookieHelper.DeleteCookie(afterAuthenticatedCookie.Name);
+
+                //Get the API user and the last SAML token to keep things API friendly
+                var apiUser = _usersApi.Get(new UsersGetOptions() { Id = e.Id.Value });
+
+                SamlEvents.Instance.OnAfterAuthenticate(apiUser, samlTokenData);
+            }
+            catch (Exception ex)
+            {
+                _eventLogApi.Write("SamlOAuthClient Error OnAfterAuthenticate: " + ex.Message + " : " + ex.StackTrace, new EventLogEntryWriteOptions() { Category = "SAML", EventId = 1, EventType = "Error" });
+            }
 
         }
 
@@ -282,7 +322,7 @@ namespace Telligent.Services.SamlAuthenticationPlugin
             }
             catch (Exception ex)
             {
-                Apis.Get<IEventLog>().Write("Error deleting user from db_SamlTokenStore. " + ex, new EventLogEntryWriteOptions { Category = "SAML", EventId = 6100, EventType = "Warning" });
+                _eventLogApi.Write("SamlOAuthClient Error AfterUserDelete: " + ex.Message + " : " + ex.StackTrace, new EventLogEntryWriteOptions() { Category = "SAML", EventId = 1, EventType = "Error" });
             }
         }
 
@@ -294,11 +334,10 @@ namespace Telligent.Services.SamlAuthenticationPlugin
         {
             get
             {
-                var apiUrl = Apis.Get<IUrl>();
                 if (SecureCookie) //use HTTPS only
-                    return apiUrl.Absolute("~/samlauthn").Replace("http:", "https:");
+                    return _urlApi.Absolute("~/samlauthn").Replace("http:", "https:");
                 else
-                    return apiUrl.Absolute("~/samlauthn"); //use telligent settings to force site to HTTPS if required
+                    return _urlApi.Absolute("~/samlauthn"); //use telligent settings to force site to HTTPS if required
             }
         }
 
@@ -431,6 +470,7 @@ namespace Telligent.Services.SamlAuthenticationPlugin
             get { return Configuration.GetBool("secureCookie"); }
         }
 
+
         public X509CertificateValidationMode CertificateValidationMode
         {
             get
@@ -535,19 +575,18 @@ namespace Telligent.Services.SamlAuthenticationPlugin
         protected virtual void ProcessReturnUrl()
         {
             string returnUrl = SamlHelpers.GetCookieReturnUrl();
-            var apiCoreUrls = Apis.Get<ICoreUrls>();
 
             SamlHelpers.ClearCookieReturnUrl();
 
             if (string.IsNullOrEmpty(returnUrl))
             {
-                returnUrl = apiCoreUrls.Home();
+                returnUrl = _coreUrlsApi.Home();
             }
 
             if (!string.IsNullOrEmpty(returnUrl) && SamlHelpers.IsPathOnSameServer(returnUrl, HttpContext.Current.Request.Url))
                 HttpContext.Current.Response.Redirect(returnUrl, true);
 
-            HttpContext.Current.Response.Redirect(apiCoreUrls.Home(), true);
+            HttpContext.Current.Response.Redirect(_coreUrlsApi.Home(), true);
         }
 
 
@@ -564,7 +603,7 @@ namespace Telligent.Services.SamlAuthenticationPlugin
         {
             get
             {
-                return Apis.Get<ICoreUrls>().LogIn(new CoreUrlLoginOptions() { ReturnToCurrentUrl = false }) + "?oauth_data_token_key=TOKEN";
+                return _coreUrlsApi.LogIn(new CoreUrlLoginOptions() { ReturnToCurrentUrl = false }) + "?oauth_data_token_key=TOKEN";
             }
             set
             {
@@ -584,7 +623,7 @@ namespace Telligent.Services.SamlAuthenticationPlugin
                     return String.Format(@"<div style=""display:none""><iframe id=""saml-logout"" width=""0"" height=""0"" src=""{0}"" onload=""jQuery(document).trigger('oauthsignout');""></iframe></div>", IdpLogoutUrl);
 
                 if (LogoutUrlBehavior == LogoutUrlBehavior.EXTERNAL && IdpAuthRequestType == AuthnBinding.WSFededation && !string.IsNullOrWhiteSpace(IdpLogoutUrl))
-                    return String.Format(@"<script type='text/javascript'>window.location='{0}&wreply={1}';</script>", IdpLogoutUrl, Apis.Get<IUrl>().Absolute("~/logout"));
+                    return String.Format(@"<script type='text/javascript'>window.location='{0}&wreply={1}';</script>", IdpLogoutUrl, _urlApi.Absolute("~/logout"));
 
                 return string.Empty;
             }
@@ -673,23 +712,12 @@ namespace Telligent.Services.SamlAuthenticationPlugin
                 if (samlTokenData == null)
                     throw new ArgumentException("The SAML token was not found in the HttpContext.Current.Request, or could not be extracted.  Please ensure cookies are enabled and try again");
 
-                //if the user already exists we can distroy the cached saml reference at this time
-                if (samlTokenData.IsExistingUser())
-                    CookieHelper.DeleteCookie(tokenKey);
 
-                //create a tracking cookie which can be used to determine a user just logged in to fire the after authenticated event.
-                if (samlTokenData.IsExistingUser())
-                {
-                    HttpCookie afterAuthenticatedCookie = new HttpCookie(clientType, samlTokenData.UserId.ToString());
-                    afterAuthenticatedCookie.HttpOnly = true;
-                    CookieHelper.AddCookie(afterAuthenticatedCookie);
-                }
-                else //Store our token key so we can retrieve it later to raise the SamlUserCreated event and delete it
-                {
-                    HttpCookie afterAuthenticatedCookie = new HttpCookie(clientType, tokenKey);
-                    afterAuthenticatedCookie.HttpOnly = true;
-                    CookieHelper.AddCookie(afterAuthenticatedCookie);
-                }
+                //Store our token key so we can retrieve it later to raise the SamlUserCreated and SamlAuthenticated events and delete it
+                HttpCookie afterAuthenticatedCookie = new HttpCookie(clientType, tokenKey);
+                afterAuthenticatedCookie.HttpOnly = true;
+                CookieHelper.AddCookie(afterAuthenticatedCookie);
+
 
                 //this object is stored in temporary storage by the oauth handler, its guid is placed into the return url into the "TOKEN" placeholder.
                 //the expectation of this processing is the return url at this time is to the login page, and that any login based return url should be double encoded
@@ -732,11 +760,18 @@ namespace Telligent.Services.SamlAuthenticationPlugin
             {
                 lock (lockObject)
                 {
-                    //Ensure SAML SQL tables are present
-                    if (!SqlData.IsInstalled())
-                        SqlData.Install();
-                    else if (SqlData.NeedsUpgrade())
-                        SqlData.Upgrade();
+                    try
+                    {
+                        //Ensure SAML SQL tables are present
+                        if (!SqlData.IsInstalled())
+                            SqlData.Install();
+                        else if (SqlData.NeedsUpgrade())
+                            SqlData.Upgrade();
+                    }
+                    catch (Exception ex)
+                    {
+                        _eventLogApi.Write("SamlOAuthClient Error InitializeScheama (you may need to manually run the sql install script): " + ex.Message + " : " + ex.StackTrace, new EventLogEntryWriteOptions() { Category = "SAML", EventId = 1, EventType = "Error" });
+                    }
                 }
             }
         }

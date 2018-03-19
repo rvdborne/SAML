@@ -30,7 +30,7 @@ namespace Telligent.Services.SamlAuthenticationPlugin.Components
 
         public virtual SamlTokenData GetSamlTokenData()
         {
-
+            var samlUserLookup = PluginManager.GetSingleton<ISamlUserLookup>();
             var dispalyNameGenerator = PluginManager.GetSingleton<ISamlDisplayNameGenerator>();
             var usernameGenerator = PluginManager.GetSingleton<ISamlUsernameGenerator>();
             var samlTokenValidator = PluginManager.GetSingleton<ISamlTokenDataValidator>();
@@ -45,6 +45,14 @@ namespace Telligent.Services.SamlAuthenticationPlugin.Components
             samlTokenData.NameId = samlTokenData.ClientId = GetNameId(samlToken);
             samlTokenData.Email = samlTokenData.GetAttribute(tokenProcessorConfiguration.EmailAttributeName, null);
 
+            //fall back to a known claim if the nameid wasnt found in the saml token
+            if(samlTokenData.ClientId == null)
+                samlTokenData.NameId = samlTokenData.ClientId = samlTokenData.UserName;
+
+            //see if we have a ISamlUserLookup to check for existing OauthLinks
+            if (samlUserLookup != null && samlUserLookup.Enabled)
+                samlTokenData = samlUserLookup.GetUser(samlTokenData);
+
             //check if we have a custom user name plugin and execute it now to populate the UserName attribue
             if (usernameGenerator != null && usernameGenerator.Enabled)
                 samlTokenData = usernameGenerator.GenerateUsername(samlTokenData);
@@ -55,31 +63,29 @@ namespace Telligent.Services.SamlAuthenticationPlugin.Components
             if (dispalyNameGenerator != null && dispalyNameGenerator.Enabled)
                 samlTokenData = dispalyNameGenerator.GenerateDisplayName(samlTokenData);
 
-            //fall back to a known claim if the nameid wasnt found in the saml token
-            if(samlTokenData.ClientId == null)
-                samlTokenData.NameId = samlTokenData.ClientId = samlTokenData.UserName;
 
-
-
-            // Get the UserID
-            int userID = 0;
-
-
-            //look up the user by username.
-            var user = apiUsers.Get(new UsersGetOptions() { Username = samlTokenData.UserName });
-            if (user != null && !user.HasErrors() && user.Id.HasValue)
-                userID = user.Id.Value;
-
-            if (userID == 0 && tokenProcessorConfiguration.AllowTokenMatchingByEmailAddress)
+            if (!samlTokenData.IsExistingUser()) //only run if the ISamlUserLookup didnt already give us the UserId
             {
-                // look up the user by email address
-                user = apiUsers.Get(new UsersGetOptions() { Email = samlTokenData.Email.ToLower() });
+                // Get the UserID
+                int userID = 0;
+
+
+                //look up the user by username.
+                var user = apiUsers.Get(new UsersGetOptions() { Username = samlTokenData.UserName });
                 if (user != null && !user.HasErrors() && user.Id.HasValue)
                     userID = user.Id.Value;
-            }
 
-            if (userID > 0)
-                samlTokenData.UserId = userID;
+                if (userID == 0 && tokenProcessorConfiguration.AllowTokenMatchingByEmailAddress)
+                {
+                    // look up the user by email address
+                    user = apiUsers.Get(new UsersGetOptions() { Email = samlTokenData.Email.ToLower() });
+                    if (user != null && !user.HasErrors() && user.Id.HasValue)
+                        userID = user.Id.Value;
+                }
+
+                if (userID > 0)
+                    samlTokenData.UserId = userID;
+            }
 
             if (samlTokenValidator != null && samlTokenValidator.Enabled)
                 samlTokenValidator.Validate(samlToken, samlTokenData);

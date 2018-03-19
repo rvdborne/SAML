@@ -22,7 +22,6 @@ namespace Telligent.Services.SamlAuthenticationPlugin.Components
 
             if (SamlHelpers.IsSignInResponse)
             {
-                var samlUserLookup = PluginManager.GetSingleton<ISamlUserLookup>();
 
                 //use httpcontextuser is set to true, so this code below will only ever fire if there is a HttpContextUser set
                 SamlTokenData samlTokenData = null;
@@ -35,10 +34,6 @@ namespace Telligent.Services.SamlAuthenticationPlugin.Components
 
                 if (samlTokenData == null)
                     throw new InvalidOperationException("No valid saml token was decected, login failed");
-
-                if (samlUserLookup != null && samlUserLookup.Enabled)
-                    samlTokenData = samlUserLookup.GetUser(samlTokenData);
-
 
                 if (samlTokenData.IsExistingUser())
                 {

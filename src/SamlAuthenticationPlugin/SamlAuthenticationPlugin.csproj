@@ -89,6 +89,9 @@
     <Reference Include="Telligent.Evolution.Api">
       <HintPath>..\References\Telligent.Evolution.Api.dll</HintPath>
     </Reference>
+    <Reference Include="Telligent.Evolution.Components">
+      <HintPath>..\References\Telligent.Evolution.Components.dll</HintPath>
+    </Reference>
     <Reference Include="Telligent.Evolution.Controls">
       <HintPath>..\References\Telligent.Evolution.Controls.dll</HintPath>
     </Reference>
@@ -115,10 +118,17 @@
     <Compile Include="Components\SamlAttribute.cs" />
     <Compile Include="Components\SamlTokenData.cs" />
     <Compile Include="Components\TokenProcessor.cs" />
+    <Compile Include="Extensibility\Events\ISamlEventExecutor.cs" />
     <Compile Include="Extensibility\ISamlOAuthLinkManager.cs" />
     <Compile Include="Extensibility\IPlatformLogout.cs" />
+    <Compile Include="Extensibility\Events\SamlAfterUserCreateEventArgs.cs" />
+    <Compile Include="Extensibility\Events\SamlAfterAuthenticateEventArgs.cs" />
+    <Compile Include="Extensibility\Events\SamlEvents.cs" />
+    <Compile Include="Extensions\UserEmailManager.cs" />
+    <Compile Include="Extensions\ProfileAttributeManager.cs" />
+    <Compile Include="Extensions\RoleMembershipManager.cs" />
     <Compile Include="SamlOAuthClient.cs" />
-    <Compile Include="SamlDisplayNameGenerator.cs" />
+    <Compile Include="Extensions\SamlDisplayNameGenerator.cs" />
     <Compile Include="Extensibility\ISamlUserLookup.cs" />
     <Compile Include="Extensibility\ISamlTokenDataValidator.cs" />
     <Compile Include="Extensibility\ISamlDisplayNameGenerator.cs" />
@@ -163,7 +173,7 @@
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PostBuildEvent>xcopy $(TargetDir)$(TargetFileName) $(SolutionDir)..\install\$(TargetFileName) /s/e/y</PostBuildEvent>
+    <PostBuildEvent>rem xcopy $(TargetDir)$(TargetFileName) $(SolutionDir)..\install\$(TargetFileName) /s/e/y</PostBuildEvent>
   </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

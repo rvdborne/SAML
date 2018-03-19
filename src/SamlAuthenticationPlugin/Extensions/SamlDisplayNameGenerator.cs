@@ -3,7 +3,7 @@ using Telligent.Evolution.Extensibility.Version1;
 using Telligent.Services.SamlAuthenticationPlugin.Components;
 using Telligent.Services.SamlAuthenticationPlugin.Extensibility;
 
-namespace Telligent.Services.SamlAuthenticationPlugin
+namespace Telligent.Services.SamlAuthenticationPlugin.Extensions
 {
     public class SamlDisplayNameGenerator : ISamlDisplayNameGenerator, IRequiredConfigurationPlugin
     {
