@@ -14,7 +14,10 @@ namespace Telligent.Services.SamlAuthenticationPlugin.Components
     public class SamlTokenData
     {
 
-        public SamlTokenData() { }
+        public SamlTokenData()
+        {
+            UserId = 0;
+        }
 
         public string AvatarUrl { get; set; }
         public string NameId { get; set; }
