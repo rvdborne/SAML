@@ -39,7 +39,7 @@ namespace Telligent.Services.SamlAuthenticationPlugin.Components
             //Extracts, validates and returns the assertion nodes from the current context samlResponse
             SecurityToken samlToken = GetAssertion();
 
-            var samlTokenData = new SamlTokenData { Attributes = GetClaims(samlToken), ResponseDate = DateTime.Now };
+            var samlTokenData = new SamlTokenData { Attributes = GetClaims(samlToken), ResponseDate = DateTime.Now, UserId = 0 };
 
 
             samlTokenData.NameId = samlTokenData.ClientId = GetNameId(samlToken);

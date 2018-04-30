@@ -89,9 +89,6 @@
     <Reference Include="Telligent.Evolution.Api">
       <HintPath>..\References\Telligent.Evolution.Api.dll</HintPath>
     </Reference>
-    <Reference Include="Telligent.Evolution.Components">
-      <HintPath>..\References\Telligent.Evolution.Components.dll</HintPath>
-    </Reference>
     <Reference Include="Telligent.Evolution.Controls">
       <HintPath>..\References\Telligent.Evolution.Controls.dll</HintPath>
     </Reference>

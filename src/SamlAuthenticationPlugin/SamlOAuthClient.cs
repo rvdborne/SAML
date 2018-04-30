@@ -280,7 +280,6 @@ namespace Telligent.Services.SamlAuthenticationPlugin
             if (context.Request.RawUrl.ToLower().StartsWith("/favicon.ico")) return;
             if (context.Request.RawUrl.ToLower().EndsWith(".css")) return;
 
-            _eventLogApi.Write("SamlOAuthClient Events_AfterIdentify RawURL : " + context.Request.RawUrl, new EventLogEntryWriteOptions() { Category = "SAML", EventId = 1, EventType = "Error" });
             //check to see if our Oauth ProcessLogin() cookie exists
             try
             {
@@ -293,8 +292,6 @@ namespace Telligent.Services.SamlAuthenticationPlugin
 
                 if (!samlTokenData.IsExistingUser()) return;
 
-                _eventLogApi.Write("SamlOAuthClient OnAfterAuthenticate afterAuthenticatedCookie.Value = " + afterAuthenticatedCookie.Value + " e.Id.Value = " + e.Id.Value.ToString(), new EventLogEntryWriteOptions() { Category = "SAML", EventId = 1, EventType = "Error" });
-
                 if (samlTokenData.UserId != e.Id.Value) return;  //check to see that the logged in user and ProcessLogin() user have the same ID;
 
                 CookieHelper.DeleteCookie(afterAuthenticatedCookie.Value);
@@ -303,7 +300,6 @@ namespace Telligent.Services.SamlAuthenticationPlugin
                 //Get the API user and the last SAML token to keep things API friendly
                 var apiUser = _usersApi.Get(new UsersGetOptions() { Id = e.Id.Value });
 
-                _eventLogApi.Write("SamlOAuthClient Error OnAfterAuthenticate", new EventLogEntryWriteOptions() { Category = "SAML", EventId = 1, EventType = "Error" });
                 SamlEvents.Instance.OnAfterAuthenticate(apiUser, samlTokenData);
             }
             catch (Exception ex)
