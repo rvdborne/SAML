@@ -31,62 +31,11 @@ To use this plugin, your SAML token must support the following claims (exact cla
 
 There are also extensibility points for custom username and display name handling during the authentication  lifecycle.
 
+#### Documentation:
 
+Please refer to the [Wiki](/Telligent/SAML/wiki) in this repository for additional documentation.
 
-#### Dependencies
-
-Please copy your local Community library files to the **References** folder. 
-
-- Telligent.DynamicConfiguration.dll
-- Telligent.Evolution.Api.dll
-- Telligent.Evolution.Controls.dll
-- Telligent.Evolution.Platform.dll
-
-
-
-
-
-### Install and configure the Telligent SAML Authentication Plugin
-
-#### In this Article
-
-- [Installing Web files](#installing-web-files)
-- [Installing SQL files](#installing-sql-files)
-- [Installing tasks](#installing-tasks)
-
-#### Installing Web files
-
-> It is recommended that you back up your entire Web directory before performing any installs.
-
-1. Copy the contents of /Web to your Web installation directory.  The /Web folder contents of the installation package mirrors the Telligent Evolution Web structure.
-
-
-#### Installing SQL files
-
-> It is recommended that you do a full database backup before installing SQL.
-
-The installation package will self install the required schema updates, only manually run the sql script if your website does not have permission to change your sql schema.  
-If you are required to manually run the sql schema updates, be sure to use a version of the sql files which matches the build number of your 'Telligent.Services.SamlAuthenticationPlugin.dll'
-
-#### Enabling SAML plugin
-
-1. Go to the Web site's Control Panel page. Browse to the Manage Plugins page (**System Administration > Site Administration > Site Configuration > Manage Plugins**).
-2. Place a check mark next to the **SAML Authentication OAuth Client** plugin, and click **Save**.
-3. Click Configure.  
-
-[//]: # "TODO Configuration Information"
-
-> Enabling the "SAML Authentication OAuth Client" plugin updates the database schema (if required) and adds the SAML Authentication OAuth Client widgets to site’s pages and Adds the SAML Authentication OAuth Client Widgets to the site. Server and/or browser caching may prevent these changes from being seen immediately. After enabling the plugin, restarting the Web site and/or clearing the browser cache should make the SAML Authentication OAuth Client functionality appear immediately.
-
-#### Installing tasks
-
-1. Stop your Job Scheduler Service.
-2. You will need to copy the following files from the installation package to their respective places in the installation directory or the Job Scheduler service:(note: * means all, e.g., *.dll means all files with the extension of .dll)
-  - Copy **Web/bin/&#42;.dll** to the root of the Job Scheduler installation (same location as the .exefile).
-  - Copy all files and folders from Web/Languages to the same folder in the Job Scheduler installation.
-3. Restart your Job Scheduler Service.
-
-#### User Management
+#### A note on existing users:
 If you have existing users in your database or create users outside of the SAML workflow (e.g., via the Administration area or REST) those Users will need to know the username and password used to create the account so they are able to link their Telligent user with their SAML user identity.  (To support this ability users need a custom ISamlOAuthLinkManager extension)
 
 #### Version History
