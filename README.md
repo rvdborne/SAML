@@ -33,7 +33,7 @@ There are also extensibility points for custom username and display name handlin
 
 #### Documentation:
 
-Please refer to the [Wiki](/Telligent/SAML/wiki) in this repository for additional documentation.
+Please refer to the [Wiki](https://github.com/Telligent/SAML/wiki) in this repository for additional documentation.
 
 #### A note on existing users:
 If you have existing users in your database or create users outside of the SAML workflow (e.g., via the Administration area or REST) those Users will need to know the username and password used to create the account so they are able to link their Telligent user with their SAML user identity.  (To support this ability users need a custom ISamlOAuthLinkManager extension)
