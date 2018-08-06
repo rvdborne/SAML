@@ -106,7 +106,7 @@ namespace Telligent.Services.SamlAuthenticationPlugin.Components
                 myFileStream.Read(Buffer, 0, (int)FileSize);
                 myFileStream.Close();
 
-                // Tell the browse stuff about the file
+                // Tell the browser stuff about the file
                 context.Response.AddHeader("Content-Length", FileSize.ToString());
                 context.Response.AddHeader("Content-Disposition", "inline; filename=oauth.gif");
                 context.Response.ContentType = "image/gif";

@@ -86,7 +86,7 @@ namespace Telligent.Services.SamlAuthenticationPlugin.Components
                     break;
 
                 case AuthnBinding.Redirect: //untested
-                    context.Response.Redirect(samlPlugin.IdpUrl + "?SAMLRequest=" + System.Text.Encoding.Default.GetString(ZipStr(GetSamlAuthnBase64(requestId, samlPlugin.IdpUrl, issuerUrl))) + "&RelayState=" + HttpUtility.UrlEncode("/SamlLogin?ReturnUrl=" + returnUrl), false);
+                    context.Response.Redirect(samlPlugin.IdpUrl + "?SAMLRequest=" + HttpUtility.UrlEncode(System.Text.Encoding.Default.GetString(ZipStr(GetSamlAuthnBase64(requestId, samlPlugin.IdpUrl, issuerUrl)))) + "&RelayState=" + HttpUtility.UrlEncode("/SamlLogin?ReturnUrl=" + returnUrl), false);
                     HttpContext.Current.ApplicationInstance.CompleteRequest();
                     break;
 

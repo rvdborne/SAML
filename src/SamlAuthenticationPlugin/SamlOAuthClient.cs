@@ -676,10 +676,10 @@ namespace Telligent.Services.SamlAuthenticationPlugin
             {
                 try
                 {
-                    ICentralizedFile file = CentralizedFileStorage.GetFileStore("oauthimages").GetFile(string.Empty, "saml.png");
                     var configuredIconUrl = Configuration.GetString("iconUrl");
                     if (!string.IsNullOrEmpty(configuredIconUrl))
                         return configuredIconUrl;
+
                     return SamlHelpers.GetWebResourceUrl(this.GetType(), "Telligent.Services.SamlAuthenticationPlugin.Resources.Images.saml.png");
                 }
                 catch

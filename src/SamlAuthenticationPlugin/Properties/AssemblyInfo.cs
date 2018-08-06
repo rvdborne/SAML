@@ -22,5 +22,5 @@ using System.Web.UI;
 [assembly: Guid("76db9d88-9ae9-4e35-8f56-bf48c972a4aa")]
 
 //embeded resources
-[assembly: WebResource("SamlAuthenticationPlugin.Resources.Images.saml.png", "image/png")]
-[assembly: WebResource("SamlAuthenticationPlugin.Resources.Images.oauth.gif", "image/gif")]
+[assembly: WebResource("Telligent.Services.SamlAuthenticationPlugin.Resources.Images.saml.png", "image/png")]
+[assembly: WebResource("Telligent.Services.SamlAuthenticationPlugin.Resources.Images.oauth.gif", "image/gif")]

@@ -1,29 +1,33 @@
-﻿<scriptedContentFragments><scriptedContentFragment name="Saml Login Auto-Select" version="8.0.4.41029" description="Auto Selects the SAML login option when SAML is enabled" instanceIdentifier="63b5fbf0d2db41eaa165c27ac43ee0f7" theme="" isCacheable="false" varyCacheByUser="false" showHeaderByDefault="true" cssClass=""><contentScript>#if (!$core_v2_widget.IsInWidgetPreviewMode)
-	$core_v2_page.EnsureSecureConnection("%{ IsAuthenticatingUser = 'true' }")
-#end
+﻿<scriptedContentFragments><scriptedContentFragment name="Saml Login Auto-Select" version="8.0.4.41029" description="Auto Selects the SAML login option when SAML is enabled" instanceIdentifier="63b5fbf0d2db41eaa165c27ac43ee0f7" theme="" isCacheable="false" varyCacheByUser="false" showHeaderByDefault="true" cssClass=""><contentScript>
+  ##uncomment this line to prevent the login form from auto selecting the saml option during testing
+  ##$core_v2_widget.Hide()
+  
+  #if (!$core_v2_widget.IsInWidgetPreviewMode)
+  $core_v2_page.EnsureSecureConnection("%{ IsAuthenticatingUser = 'true' }")
+  #end
 
-## if there were auth providers, render them
-#set ($hasSamlOAuthProvider = false)
-#set ($providers = $core_v2_authentication.ListOAuthProviders())
-#foreach ($provider in $providers)
-    #if ($provider.ClientType == 'saml')
-	    #set ($hasSamlOAuthProvider = true)
-	#end
-#end
+  ## if there were auth providers, render them
+  #set ($hasSamlOAuthProvider = false)
+  #set ($providers = $core_v2_authentication.ListOAuthProviders())
+  #foreach ($provider in $providers)
+  #if ($provider.ClientType == 'saml')
+  #set ($hasSamlOAuthProvider = true)
+  #end
+  #end
 
-#if($hasSamlOAuthProvider)
-    #set ($mode = $core_v2_widget.GetStringValue('mode', 'login'))
-    #set ($loginTypeSetting = $core_v2_widget.GetStringValue('loginType', 'username'))
-    #set ($oAuthDataTokenKey = "oauth_data_token_key")
-    #set ($oAuthDataTokenValue = $core_v2_page.GetQueryStringValue($oAuthDataTokenKey))
-    
-    
-    #if (!$core_v2_page.IsPost || $core_v2_widget.IsInWidgetPreviewMode)
-    	## login mode or any sort of oauth connect redirect handling (whether from login or join)
-    	#if ($mode == 'login' || $oAuthDataTokenValue)
-    		## implies page was loaded as the result of handling an oauth login request
-    		#if ($oAuthDataTokenValue)
-    			#if ($oAuthDataTokenValue.Length &gt; 0)
+  #if($hasSamlOAuthProvider)
+  #set ($mode = $core_v2_widget.GetStringValue('mode', 'login'))
+  #set ($loginTypeSetting = $core_v2_widget.GetStringValue('loginType', 'username'))
+  #set ($oAuthDataTokenKey = "oauth_data_token_key")
+  #set ($oAuthDataTokenValue = $core_v2_page.GetQueryStringValue($oAuthDataTokenKey))
+
+
+  #if (!$core_v2_page.IsPost || $core_v2_widget.IsInWidgetPreviewMode)
+  ## login mode or any sort of oauth connect redirect handling (whether from login or join)
+  #if ($mode == 'login' || $oAuthDataTokenValue)
+  ## implies page was loaded as the result of handling an oauth login request
+  #if ($oAuthDataTokenValue)
+  #if ($oAuthDataTokenValue.Length &gt; 0)
     
     			## If these conditions are met, this is part of the login and we need to leave the get request alone and not redirect...
     			
