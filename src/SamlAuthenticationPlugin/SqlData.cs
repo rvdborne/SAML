@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
+using Telligent.Common;
 using Telligent.Evolution.Extensibility.Api.Version1;
 using Telligent.Services.SamlAuthenticationPlugin.Components;
 
@@ -34,6 +35,80 @@ namespace Telligent.Services.SamlAuthenticationPlugin
 
         private SqlData()
         { }
+
+        public static void SaveEncryptedSamlToken(Guid tokenKey, string encryptedData)
+        {
+            try
+            {
+                using (var conn = GetSqlConnection())
+                {
+                    var sql = $"INSERT INTO [{databaseOwner}].[db_SamlTokenData]" +
+                              $"(TokenKey" +
+                              $", EncryptedData)" +
+                              $"VALUES" +
+                              $"(@TokenKey" +
+                              $",@EncryptedData)";
+
+                    var myCommand = new SqlCommand(sql, conn) {CommandType = CommandType.Text};
+
+                    myCommand.Parameters.Add("@TokenKey", SqlDbType.UniqueIdentifier).Value = tokenKey;
+                    myCommand.Parameters.Add("@EncryptedData", SqlDbType.NVarChar).Value = encryptedData;
+
+                    conn.Open();
+                    myCommand.ExecuteNonQuery();
+                }
+            }
+            catch (Exception ex)
+            {
+                PublicApi.Eventlogs.Write("Error inserting token into the db_SamlTokenData table. " + ex, new EventLogEntryWriteOptions() { Category = "SAML", EventId = 6009, EventType = "Error" });
+            }
+        }
+
+        public static string GetTokenData(string tokenKey)
+        {
+            try
+            {
+                using (var conn = GetSqlConnection())
+                {
+                    var sql =
+                        $"SELECT EncryptedData FROM [{databaseOwner}].[db_SamlTokenData] WHERE TokenKey = @TokenKey";
+
+                    var command = new SqlCommand(sql, conn) {CommandType = CommandType.Text};
+
+                    command.Parameters.Add("@TokenKey", SqlDbType.UniqueIdentifier).Value = Guid.Parse(tokenKey);
+                    conn.Open();
+
+                    return (string) command.ExecuteScalar();
+                }
+            }
+            catch (Exception ex)
+            {
+                PublicApi.Eventlogs.Write("Error reading from db_SamlTokenData; I dont think its installed. " + ex, new EventLogEntryWriteOptions() { Category = "SAML", EventId = 6011, EventType = "Error" });
+                return string.Empty;
+            }
+        }
+
+        public static void DeleteTokenData(string tokenKey)
+        {
+            try
+            {
+                using (var conn = GetSqlConnection())
+                {
+                    var sql =
+                        $"DELETE FROM [{databaseOwner}].[db_SamlTokenData] WHERE TokenKey = @TokenKey";
+
+                    var command = new SqlCommand(sql, conn) { CommandType = CommandType.Text };
+
+                    command.Parameters.Add("@TokenKey", SqlDbType.UniqueIdentifier).Value = Guid.Parse(tokenKey);
+                    conn.Open();
+                    command.ExecuteNonQuery();
+                }
+            }
+            catch (Exception ex)
+            {
+                PublicApi.Eventlogs.Write("Error deleting from db_SamlTokenData; I dont think its installed. " + ex, new EventLogEntryWriteOptions() { Category = "SAML", EventId = 6011, EventType = "Error" });
+            }
+        }
 
         public static void SaveSamlToken(SamlTokenData samlTokenData)
         {
@@ -75,7 +150,7 @@ namespace Telligent.Services.SamlAuthenticationPlugin
             }
             catch (Exception ex)
             {
-                PublicApi.Eventlogs.Write("Error reading from db_SamlTokenStore; I dont think its installed. " + ex.ToString(), new EventLogEntryWriteOptions(){ Category= "SAML",  EventId =  6011, EventType="Error"});
+                PublicApi.Eventlogs.Write("Error reading from db_SamlTokenStore; I dont think its installed. UserId: " + userId + " : " + ex.ToString(), new EventLogEntryWriteOptions(){ Category= "SAML",  EventId =  6011, EventType="Error"});
             }
 
             return null;
@@ -102,13 +177,19 @@ namespace Telligent.Services.SamlAuthenticationPlugin
                         string.Format(
                             @"INSERT INTO [{0}].[db_SamlTokenStore]
                            ([UserId]
+                           ,[AssertionId]
+                           ,[Signature]
                            ,[SamlOAuthData]
+                           ,[ResponseData]
                            ,[ResponseDate]
                            ,[Email]
                            ,[ClientId])
                      VALUES
                            (@userId
+                           ,@assertionId
+                           ,@signature
                            ,@samlOAuthData
+                           ,@responseData
                            ,@responseDate
                            ,@email
                            ,@nameId)",
@@ -122,6 +203,9 @@ namespace Telligent.Services.SamlAuthenticationPlugin
                     myCommand.Parameters.Add("@responseDate", SqlDbType.DateTime).Value = responseDate;
                     myCommand.Parameters.Add("@email", SqlDbType.NVarChar).Value = email;
                     myCommand.Parameters.Add("@nameId", SqlDbType.NVarChar).Value = nameId;
+                    myCommand.Parameters.Add("@assertionId", SqlDbType.VarChar).Value = Guid.Empty.ToString();
+                    myCommand.Parameters.Add("@signature", SqlDbType.VarChar).Value = Guid.Empty.ToString();
+                    myCommand.Parameters.Add("@responseData", SqlDbType.VarChar).Value = Guid.Empty.ToString();
 
                     // Execute the command
                     myConnection.Open();

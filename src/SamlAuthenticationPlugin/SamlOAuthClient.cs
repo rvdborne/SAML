@@ -11,6 +11,7 @@ using Telligent.Evolution.Extensibility.UI.Version1;
 using Telligent.Evolution.Extensibility.Urls.Version1;
 using Telligent.Evolution.Extensibility.Version1;
 using Telligent.Services.SamlAuthenticationPlugin.Components;
+using Telligent.Services.SamlAuthenticationPlugin.Extensibility.Events;
 
 namespace Telligent.Services.SamlAuthenticationPlugin
 {
@@ -37,13 +38,15 @@ namespace Telligent.Services.SamlAuthenticationPlugin
        
         private const SubjectRecipientValidationMode _subjectRecipientValidationModeDefault = SubjectRecipientValidationMode.ExactMatch;
         private const bool _allowTokenMatchingByEmailAddressDefault = true;
-        private const bool _allowAutoUserRegistrationDefault = true;
+        private const bool _allowAutoUserRegistrationDefault = true;        
+        private IUsers _usersApi;
 
         #endregion
 
         public static string PluginName = "SAML Authentication OAuth Client";  //allows for build automation
         public const string clientType = "saml";  //oauth client type
         internal const string oauthTokeyQuerystringKey = "saml_data_token_key";
+        private IEventLog _eventLogApi;
 
         public static List<string> PluginCategories = new List<string> { "SAML", "OAuth" }; //leverage this for extensions to make them easier to find
 
@@ -81,8 +84,7 @@ namespace Telligent.Services.SamlAuthenticationPlugin
             get;
             private set;
         }
-
-
+        
         public void Update(IPluginConfiguration configuration)
         {
             Configuration = configuration;
@@ -194,7 +196,99 @@ namespace Telligent.Services.SamlAuthenticationPlugin
         #endregion
         public void Initialize()
         {
+            _eventLogApi = PublicApi.Eventlogs;
+            _usersApi = PublicApi.Users;
+
+            _usersApi.Events.AfterCreate += Events_AfterCreate;
+            _usersApi.Events.AfterIdentify += Events_AfterIdentify;
         }
+
+        #region Lifecycle Events
+
+        private void Events_AfterCreate(UserAfterCreateEventArgs e)
+        {
+            var afterCreatedCookie = CookieHelper.GetCookie(SamlOAuthClient.clientType);
+            if (afterCreatedCookie == null) return;
+
+            var samlTokenData = SamlTokenData.GetTokenDataFromDatabase(afterCreatedCookie.Value);
+            if (samlTokenData == null) return;
+
+            //destroy secure cookie for new user if cookie is still present
+            CookieHelper.DeleteCookie(afterCreatedCookie.Value);
+            //also cleanup our afterCreatedCookie
+            CookieHelper.DeleteCookie(afterCreatedCookie.Name);
+
+            //update the samlTokenData now that we know the user ID and cleanup the cookie used by the login
+            samlTokenData.UserId = e.Id.Value;
+            CookieHelper.DeleteCookie(afterCreatedCookie.Value);
+
+            //Update the cookie SAMLToken Data to have the UserId now that its an existing user to fire the after authenticated events (which also removes the cookie)
+            var tokenKey = samlTokenData.SaveTokenDataToDatabase();
+            var afterAuthenticatedCookie = new HttpCookie(clientType, tokenKey);
+            afterAuthenticatedCookie.HttpOnly = true;
+            CookieHelper.AddCookie(afterAuthenticatedCookie);
+
+            if (PersistClaims)
+            {
+                SqlData.SaveSamlToken(samlTokenData);
+            }
+
+            var apiUser = _usersApi.Get(new UsersGetOptions() { Id = e.Id.Value });
+
+            //raise new SamlUserCreated Event
+            try
+            {
+                SamlEvents.Instance.OnAfterUserCreate(apiUser, samlTokenData);
+            }
+            catch (Exception ex)
+            {
+                _eventLogApi.Write("SamlOAuthClient Error OnAfterUserCreate: " + ex.Message + " : " + ex.StackTrace, new EventLogEntryWriteOptions() { Category = "SAML", EventId = 1, EventType = "Error" });
+            }
+        }
+
+        private void Events_AfterIdentify(UserAfterIdentifyEventArgs e)
+        {
+            var context = HttpContext.Current;
+            if (context?.Request == null) return;
+            if (!context.Request.IsAuthenticated) return;
+
+            if (context.Request.RawUrl.ToLower().StartsWith("/socket.ashx")) return;
+            if (context.Request.RawUrl.ToLower().StartsWith("/webresource.axd")) return;
+            if (context.Request.RawUrl.ToLower().StartsWith("/api.ashx")) return;
+            if (context.Request.RawUrl.ToLower().StartsWith("/utility/")) return;
+            if (context.Request.RawUrl.ToLower().StartsWith("/cfs-filesystemfile/")) return;
+            if (context.Request.RawUrl.ToLower().StartsWith("/dynamic-style")) return;
+            if (context.Request.RawUrl.ToLower().StartsWith("/favicon.ico")) return;
+            if (context.Request.RawUrl.ToLower().EndsWith(".css")) return;
+
+            try
+            {
+                var afterAuthenticatedCookie = CookieHelper.GetCookie(SamlOAuthClient.clientType);
+                if (afterAuthenticatedCookie == null) return;
+
+                var samlTokenData = SamlTokenData.GetTokenDataFromDatabase(afterAuthenticatedCookie.Value);
+                if (samlTokenData == null) return;
+
+                if (!samlTokenData.IsExistingUser()) return;
+
+                if (samlTokenData.UserId != e.Id.Value) return;
+
+                SamlTokenData.DeleteTokenDataFromDatabase(afterAuthenticatedCookie.Value);
+                CookieHelper.DeleteCookie(afterAuthenticatedCookie.Value);
+                CookieHelper.DeleteCookie(afterAuthenticatedCookie.Name);                
+
+                var apiUser = _usersApi.Get(new UsersGetOptions {Id = e.Id.Value});
+
+                //Common.Services.Get<ISamlEventExecutor>().OnAfterAuthenticate(apiUser, samlTokenData);
+                SamlEvents.Instance.OnAfterAuthenticate(apiUser, samlTokenData);
+            }
+            catch (Exception ex)
+            {
+                _eventLogApi.Write("SamlOAuthClient Error OnAfterUserIdentify: " + ex.Message + " : " + ex.StackTrace, new EventLogEntryWriteOptions() { Category = "SAML", EventId = 1, EventType = "Error" });
+            }
+        }
+
+        #endregion
 
         object lockObject = new object();
 
@@ -594,15 +688,15 @@ namespace Telligent.Services.SamlAuthenticationPlugin
             string tokenKey = HttpContext.Current.Request[SamlOAuthClient.oauthTokeyQuerystringKey];
             if (!string.IsNullOrEmpty(tokenKey))
             {
-                var samlTokenData = SamlTokenData.GetFromSecureCookie(tokenKey);
+                //var samlTokenData = SamlTokenData.GetFromSecureCookie(tokenKey);
+                //This was implemented to pull the token data from a database table in order to prevent sizing issues with cookies - Tony Triguero 2/14/2019
+                var samlTokenData = SamlTokenData.GetTokenDataFromDatabase(tokenKey);
                 if(samlTokenData == null)
                     throw new ArgumentException("The SAML token was not found in the HttpContext.Current.Request, or could not be extracted.  Please ensure cookies are enabled and try again");
 
-                //if the user already exists we can distroy the cached saml reference at this time
-                //in fact the only reason to keep a copy is so we can update persistant storage after the user is created
-                if (samlTokenData.IsExistingUser() || !this.PersistClaims)
-                    CookieHelper.DeleteCookie(tokenKey);
-
+                var afterAuthenticatedCookie = new HttpCookie(clientType, tokenKey) {HttpOnly = true};
+                CookieHelper.AddCookie(afterAuthenticatedCookie);
+                
                 //this object is stored in temporary storage by the oauth handler, its guid is placed into the return url into the "TOKEN" placeholder.
                 //the expectation of this processing is the return url at this time is to the login page, and that any login based return url should be double encoded
                 return samlTokenData.GetOAuthData();

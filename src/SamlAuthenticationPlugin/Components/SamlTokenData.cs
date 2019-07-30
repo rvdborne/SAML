@@ -162,6 +162,39 @@ namespace Telligent.Services.SamlAuthenticationPlugin.Components
         }
 
 
+        internal string SaveTokenDataToDatabase()
+        {
+            var tokenKey = Guid.NewGuid();
+            var samlXml = SamlHelpers.ConvertToString(this);
+            var encryptedToken = SamlHelpers.Protect(samlXml, GetType().Name);
+
+            SqlData.SaveEncryptedSamlToken(tokenKey, encryptedToken);
+
+            return tokenKey.ToString();
+        }
+
+        internal static void DeleteTokenDataFromDatabase(string tokenKey)
+        {
+            SqlData.DeleteTokenData(tokenKey);
+        }
+
+        internal static SamlTokenData GetTokenDataFromDatabase(string tokenKey)
+        {
+            try
+            {
+                var encryptedData = SqlData.GetTokenData(tokenKey);
+                var samlXml = SamlHelpers.Unprotect(encryptedData, typeof(SamlTokenData).Name);
+                var samlTokenData = SamlHelpers.Deserialize<SamlTokenData>(samlXml);
+                return samlTokenData;
+            }
+            catch (Exception ex)
+            {
+                PublicApi.Eventlogs.Write("Error Extracting SAML token from cookie:" + ex, new EventLogEntryWriteOptions() { Category = "SAML", EventType = "Error", EventId = 1001 });
+            }
+
+            return null;
+        }
+
         internal string SaveToSecureCookie()
         {
             var tokenKey = Guid.NewGuid();
