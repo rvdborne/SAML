@@ -1,0 +1,44 @@
+<scriptedContentFragments>
+	<scriptedContentFragment name="SAML - SPMetaData" version="11.0.0.7924" description="" instanceIdentifier="ef93990e8fb849bb80eb2a1ae688b274" theme="" isCacheable="false" varyCacheByUser="false" showHeaderByDefault="true" cssClass="saml" lastModified="2019-08-07 13:54:44Z">
+		<contentScript language="Velocity"><![CDATA[#set($user = $core_v2_user.Accessing)
+
+#if($core_v2_roleUsers.IsUserInRoles($user.UserName, $core_v2_utility.MakeList("Administrators")))
+    <form>
+        <fieldset>
+            <ul class="field-list">
+                <li class="field-item">
+                   <span class="field-item-input">
+                        <div>
+                            <div class="saml links">
+                                <ul>
+                                    <li style="padding-bottom: 10px; width: 100%;" class="navigation-list-item">
+                                        <a style="font-size:13px; width: 100%;" class="button download-pdf" href="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetExecutedFileUrl('spmetadata-generate.vm'))">$core_v2_language.GetResource('GenerateSpMetadata')</a>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </span> 
+                </li>
+            </ul>
+        </fieldset>
+    </form>
+#else
+    $core_v2_widget.Hide()
+#end
+]]></contentScript>
+		<headerScript language="Velocity" />
+		<configuration><![CDATA[<propertyGroup id="options" resourceName="Options">
+	<property id="fragmentHeader" resourceName="Title" dataType="string" defaultValue="${resource:SAML_SPMetadata}" controlType="Telligent.Evolution.Controls.ContentFragmentTokenStringControl, Telligent.Evolution.Platform" />
+</propertyGroup>]]></configuration>
+		<languageResources><![CDATA[<language key="en-us">
+  <resource name="GenerateSpMetadata">Generate SP Metadata</resource>
+  <resource name="Options">Options</resource>
+  <resource name="SAML_SPMetadata">SP Metadata</resource>
+  <resource name="Title">Widget Title</resource>
+</language>]]></languageResources>
+		<additionalCssScript language="Velocity" />
+		<files>
+			<file name="spmetadata-generate.vm">JHNhbWxfdjFfc3BtZXRhZGF0YS5HZW5lcmF0ZU1ldGFkYXRhRmlsZSgp</file>
+		</files>
+	</scriptedContentFragment>
+</scriptedContentFragments>
