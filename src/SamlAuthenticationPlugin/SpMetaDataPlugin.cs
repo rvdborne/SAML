@@ -47,12 +47,34 @@ namespace Telligent.Services.SamlAuthenticationPlugin
                     OrderNumber = 1
                 };
 
+                var idpMetadataUrl = new Evolution.Extensibility.Configuration.Version1.Property
+                {
+                    Id = "idpmetadataurl",
+                    LabelText = "IdP MetaData URL",
+                    DataType = "String",
+                    OrderNumber = 0,
+                    DefaultValue = "",
+                    DescriptionText = "This is the url to the IdP Metadata if available."
+                };
+                group.Properties.Add(idpMetadataUrl);
+
+                var idpPrivateKey = new Evolution.Extensibility.Configuration.Version1.Property
+                {
+                    Id = "idpprivatekey",
+                    LabelText = "IdP Private Key",
+                    DataType = "String",
+                    OrderNumber = 1,
+                    DefaultValue = "",
+                    DescriptionText = "This key is required if the IdP metadata file is signed."
+                };
+                group.Properties.Add(idpPrivateKey);
+
                 var entityId = new Evolution.Extensibility.Configuration.Version1.Property
                 {
                     Id = "entityid",
                     LabelText = "Metadata Entity Id",
                     DataType = "String",
-                    OrderNumber = 1,
+                    OrderNumber = 2,
                     DefaultValue = "",
                     DescriptionText = ""
                 };
@@ -63,7 +85,7 @@ namespace Telligent.Services.SamlAuthenticationPlugin
                     Id = "nameidformat",
                     LabelText = "NameId Format",
                     DataType = "String",
-                    OrderNumber = 2,
+                    OrderNumber = 3,
                     DefaultValue = _nameIdFormatUnspecified,
                     DescriptionText = "This is the Format of the NameId. (Optional)"
                 };
@@ -81,7 +103,7 @@ namespace Telligent.Services.SamlAuthenticationPlugin
                     Id = "authnsigned",
                     LabelText = "AuthN Requests Signed",
                     DataType = "Bool",
-                    OrderNumber = 3,
+                    OrderNumber = 4,
                     DefaultValue = "false",
                     DescriptionText = "AuthN Requests Signed (Optional)"
                 };
@@ -92,18 +114,40 @@ namespace Telligent.Services.SamlAuthenticationPlugin
                     Id = "signassertions",
                     LabelText = "Want Assertions Signed",
                     DataType = "Bool",
-                    OrderNumber = 4,
+                    OrderNumber = 5,
                     DefaultValue = "false",
                     DescriptionText = "Want Assertions Signed (Optional)"
                 };
                 group.Properties.Add(wantAssertionsSigned);
+
+                var privateKey = new Evolution.Extensibility.Configuration.Version1.Property
+                {
+                    Id = "privatekey",
+                    LabelText = "Private Key to sign the metadata.",
+                    DataType = "String",
+                    OrderNumber = 6,
+                    DefaultValue = "",
+                    DescriptionText = "Private Key to sign the metadata (Optional)"
+                };
+                group.Properties.Add(privateKey);
+
+                var x509Cert = new Evolution.Extensibility.Configuration.Version1.Property
+                {
+                    Id = "x509cert",
+                    LabelText = "X.509 cert to sign the metadata.",
+                    OrderNumber = 7,
+                    DataType = "String",
+                    DefaultValue = "",
+                    DescriptionText = "X.509 cert to sign the metadata (Optional)"
+                };
+                group.Properties.Add(x509Cert);
 
                 var orgName = new Evolution.Extensibility.Configuration.Version1.Property
                 {
                     Id = "orgname",
                     LabelText = "Organization Name",
                     DataType = "String",
-                    OrderNumber = 5,
+                    OrderNumber = 8,
                     DefaultValue = "",
                     DescriptionText = "Organization Name (Optional)"
                 };
@@ -114,7 +158,7 @@ namespace Telligent.Services.SamlAuthenticationPlugin
                     Id = "orgdisplayname",
                     LabelText = "Organization DisplayName",
                     DataType = "String",
-                    OrderNumber = 6,
+                    OrderNumber = 9,
                     DefaultValue = "",
                     DescriptionText = "Organization DisplayName (Optional)"
                 };
@@ -123,9 +167,9 @@ namespace Telligent.Services.SamlAuthenticationPlugin
                 var orgUrl = new Evolution.Extensibility.Configuration.Version1.Property
                 {
                     Id = "orgurl",
-                    LabelText = "Orginzational URL",
+                    LabelText = "Organizational URL",
                     DataType = "String",
-                    OrderNumber = 7,
+                    OrderNumber = 10,
                     DefaultValue = "",
                     DescriptionText = "Organization URL (Optional)"
                 };
@@ -136,7 +180,7 @@ namespace Telligent.Services.SamlAuthenticationPlugin
                     Id = "techname",
                     LabelText = "Technical Contact Name",
                     DataType = "String",
-                    OrderNumber = 8,
+                    OrderNumber = 11,
                     DefaultValue = "",
                     DescriptionText = "Technical Contact Name (Optional)"
                 };
@@ -147,7 +191,7 @@ namespace Telligent.Services.SamlAuthenticationPlugin
                     Id = "techemail",
                     LabelText = "Technical Contact Email",
                     DataType = "String",
-                    OrderNumber = 9,
+                    OrderNumber = 12,
                     DefaultValue = "",
                     DescriptionText = "Technical Contact Email (Optional)"
                 };
@@ -158,7 +202,7 @@ namespace Telligent.Services.SamlAuthenticationPlugin
                     Id = "supportemail",
                     LabelText = "Support Contact Email",
                     DataType = "String",
-                    OrderNumber = 10,
+                    OrderNumber = 13,
                     DefaultValue = "",
                     DescriptionText = "Support Contact Email (Optional)"
                 };
@@ -174,11 +218,15 @@ namespace Telligent.Services.SamlAuthenticationPlugin
         public string NameId => Configuration.GetString("nameidformat");
         public bool AuthnRequestsSigned => Configuration.GetBool("authnsigned").Value;
         public bool WantAssertionsSigned => Configuration.GetBool("signassertions").Value;
+        public string IdpPrivateKey => Configuration.GetString("idpprivatekey");
+        public string PrivateKey => Configuration.GetString("privatekey");
+        public string X509Cert => Configuration.GetString("x509cert");
         public string OrgName => Configuration.GetString("orgname");
         public string OrgDisplayName => Configuration.GetString("orgdisplayname");
         public string OrgUrl => Configuration.GetString("orgurl");
         public string TechEmail => Configuration.GetString("techemail");
         public string SupportEmail => Configuration.GetString("supportemail");
+        public string IdpMetaDataUrl => Configuration.GetString("idpmetadataurl");
 
         #endregion
 

@@ -7,7 +7,6 @@ using Telligent.DynamicConfiguration.Components;
 using Telligent.Evolution.Extensibility;
 using Telligent.Evolution.Extensibility.Api.Version1;
 using Telligent.Evolution.Extensibility.Authentication.Version1;
-using Telligent.Evolution.Extensibility.Storage.Version1;
 using Telligent.Evolution.Extensibility.UI.Version1;
 using Telligent.Evolution.Extensibility.Urls.Version1;
 using Telligent.Evolution.Extensibility.Version1;
@@ -61,8 +60,7 @@ namespace Telligent.Services.SamlAuthenticationPlugin
         {
             get { return "Allows single-sign-on by converting SAML Tokens into OAuth tokens."; }
         }
-
-
+        
         public void Initialize()
         {
             _eventLogApi = Apis.Get<IEventLog>();
@@ -115,11 +113,11 @@ namespace Telligent.Services.SamlAuthenticationPlugin
             tokenProcessor = null; //reset the security token handler so we can regen it
         }
 
-        public DynamicConfiguration.Components.PropertyGroup[] ConfigurationOptions
+        public PropertyGroup[] ConfigurationOptions
         {
             get
             {
-                PropertyGroup[] groups = new[] { new PropertyGroup("issuer", "Issuer", 0), new PropertyGroup("auth", "AuthN", 1), new PropertyGroup("logout", "Logout", 2), new PropertyGroup("options", "Options", 3) };
+                var groups = new[] { new PropertyGroup("issuer", "Issuer", 0), new PropertyGroup("auth", "AuthN", 1), new PropertyGroup("logout", "Logout", 2), new PropertyGroup("options", "Options", 3) };
 
                 #region Issuer
 
@@ -211,7 +209,6 @@ namespace Telligent.Services.SamlAuthenticationPlugin
                 #endregion
 
                 return groups;
-
             }
         }
 
@@ -223,9 +220,8 @@ namespace Telligent.Services.SamlAuthenticationPlugin
 
             var afterCreatedCookie = CookieHelper.GetCookie(SamlOAuthClient.clientType);
             if (afterCreatedCookie == null) return;
-
-
-            var samlTokenData = SamlTokenData.GetFromSecureCookie(afterCreatedCookie.Value);
+            
+            var samlTokenData = SamlTokenData.GetTokenDataFromDatabase(afterCreatedCookie.Value);
             if (samlTokenData == null) return;
 
             //destroy secure cookie for new user if cookie is still present
@@ -238,8 +234,8 @@ namespace Telligent.Services.SamlAuthenticationPlugin
             CookieHelper.DeleteCookie(afterCreatedCookie.Value);
 
             //Update the cookie SAMLToken Data to have the UserId now that its an existing user to fire the after authenticated events (which also removes the cookie)
-            var tokenKey = samlTokenData.SaveToSecureCookie();
-            HttpCookie afterAuthenticatedCookie = new HttpCookie(clientType, tokenKey);
+            var tokenKey = samlTokenData.SaveTokenDataToDatabase();
+            var afterAuthenticatedCookie = new HttpCookie(clientType, tokenKey);
             afterAuthenticatedCookie.HttpOnly = true;
             CookieHelper.AddCookie(afterAuthenticatedCookie);
 
@@ -283,16 +279,18 @@ namespace Telligent.Services.SamlAuthenticationPlugin
             //check to see if our Oauth ProcessLogin() cookie exists
             try
             {
-
-                var afterAuthenticatedCookie = CookieHelper.GetCookie(SamlOAuthClient.clientType);
+                var afterAuthenticatedCookie = CookieHelper.GetCookie(clientType);
                 if (afterAuthenticatedCookie == null) return;
 
-                var samlTokenData = SamlTokenData.GetFromSecureCookie(afterAuthenticatedCookie.Value);
+                var samlTokenData = SamlTokenData.GetTokenDataFromDatabase(afterAuthenticatedCookie.Value);
                 if (samlTokenData == null) return;
 
                 if (!samlTokenData.IsExistingUser()) return;
 
                 if (samlTokenData.UserId != e.Id.Value) return;  //check to see that the logged in user and ProcessLogin() user have the same ID;
+
+                if (Guid.TryParse(afterAuthenticatedCookie.Value, out var tokenKey))
+                    SamlTokenData.DeleteTokenDataFromDatabase(afterAuthenticatedCookie.Value);
 
                 CookieHelper.DeleteCookie(afterAuthenticatedCookie.Value);
                 CookieHelper.DeleteCookie(afterAuthenticatedCookie.Name);
@@ -325,97 +323,14 @@ namespace Telligent.Services.SamlAuthenticationPlugin
 
         #region Properties
 
-        public string LoginUrl
-        {
-            get
-            {
-                if (SecureCookie) //use HTTPS only
-                    return _urlApi.Absolute("~/samlauthn").Replace("http:", "https:");
-                else
-                    return _urlApi.Absolute("~/samlauthn"); //use telligent settings to force site to HTTPS if required
-            }
-        }
-
-        public string IdpUrl
-        {
-            get
-            {
-                return Configuration.GetString("idpUrl");
-            }
-        }
-
-        public SamlBinding IdpBindingType
-        {
-            get
-            {
-                SamlBinding configuredBinding;
-                if (Enum.TryParse<SamlBinding>(Configuration.GetString("idpBindingType"), true, out configuredBinding))
-                    return configuredBinding;
-                return _idpBindingTypeDefault;
-            }
-        }
-
-        public AuthnBinding IdpAuthRequestType
-        {
-            get
-            {
-                AuthnBinding configuredBinding;
-                if (Enum.TryParse<AuthnBinding>(Configuration.GetString("idpAuthRequestType"), true, out configuredBinding))
-                    return configuredBinding;
-                return _idpAuthRequestTypeDefault;
-            }
-        }
-
-        public LogoutUrlBehavior LogoutUrlBehavior
-        {
-            get
-            {
-                LogoutUrlBehavior configuredBehavior;
-                if (Enum.TryParse<LogoutUrlBehavior>(Configuration.GetString("logoutUrlBehavior"), true, out configuredBehavior))
-                    return configuredBehavior;
-
-                return _logoutUrlBehaviorDefault;
-            }
-
-        }
-
-        public string LogoutUrl
-        {
-            get
-            {
-                if (LogoutUrlBehavior == LogoutUrlBehavior.EXTERNAL)
-                    return IdpLogoutUrl;
-
-                return string.Empty; //keep this empty to use the forms auth logout page, we will use Oauth to do an IDP logout in a frame if required
-                //if for some reason we needed to go to the IDP to logout, and have them log us out through a return url / redirect, then we would want to set
-                //that value here
-            }
-
-        }
-
-        public string IdpLogoutUrl
-        {
-            get
-            {
-                if (IdpAuthRequestType == AuthnBinding.WSFededation)
-                {
-                    //var context = HttpContext.Current;
-                    //if (LogoutUrlBehavior == LogoutUrlBehavior.EXTERNAL && context != null && context.Request != null && context.Request.QueryString["wa"] != null && context.Request.QueryString["wa"].Equals("wsignout1.0", StringComparison.InvariantCultureIgnoreCase))
-                    //    return string.Empty;
-                    return string.Format("{0}?wa=wsignout1.0", IdpUrl);
-                }
-
-                return Configuration.GetString("logoutUrl");
-            }
-        }
-
-        public string AuthNCertThumbrint
-        {
-            get
-            {
-                return Configuration.GetString("authThumbprint");
-            }
-        }
+        public string LoginUrl => SecureCookie ? _urlApi.Absolute("~/samlauthn").Replace("http:", "https:") : _urlApi.Absolute("~/samlauthn");
+        public string IdpUrl => Configuration.GetString("idpUrl");
+        public SamlBinding IdpBindingType => Enum.TryParse(Configuration.GetString("idpBindingType"), true, out SamlBinding configuredBinding) ? configuredBinding : _idpBindingTypeDefault;
+        public AuthnBinding IdpAuthRequestType => Enum.TryParse<AuthnBinding>(Configuration.GetString("idpAuthRequestType"), true, out var configuredBinding) ? configuredBinding : _idpAuthRequestTypeDefault;
+        public LogoutUrlBehavior LogoutUrlBehavior => Enum.TryParse<LogoutUrlBehavior>(Configuration.GetString("logoutUrlBehavior"), true, out var configuredBehavior) ? configuredBehavior : _logoutUrlBehaviorDefault;
+        public string LogoutUrl => LogoutUrlBehavior == LogoutUrlBehavior.EXTERNAL ? IdpLogoutUrl : string.Empty;
+        public string IdpLogoutUrl => IdpAuthRequestType == AuthnBinding.WSFededation ? $"{IdpUrl}?wa=wsignout1.0" : Configuration.GetString("logoutUrl");
+        public string AuthNCertThumbrint => Configuration.GetString("authThumbprint");
 
 
         /// <summary>
@@ -424,83 +339,19 @@ namespace Telligent.Services.SamlAuthenticationPlugin
         /// In our case its important that our AuthN handler packages this return url in a way that will persist though saml auth for use
         /// at the end of our AuthenticateRequest() method.
         /// </summary>
-        public string ReturnUrlParameter
-        {
-            get
-            {
-                return SamlHelpers.ReturnUrlParameterName;
-            }
-
-        }
-
-        public bool AllowTokenMatchingByEmailAddress
-        {
-            get { return Configuration.GetBool("allowTokenMatchingByEmailAddress"); }
-        }
-
+        public string ReturnUrlParameter => SamlHelpers.ReturnUrlParameterName;
+        public bool AllowTokenMatchingByEmailAddress => Configuration.GetBool("allowTokenMatchingByEmailAddress");
         //required by IAuthenticationPlugin
-        public bool UseHttpContextUser
-        {
-            get { return true; }
-        }
-
-        public string UserNameAttributeName
-        {
-            get { return Configuration.GetString("usernameClaim"); }
-        }
-
-
-        public string EmailAttributeName
-        {
-            get { return Configuration.GetString("emailClaim"); }
-        }
-
-        public bool PersistClaims
-        {
-            get { return Configuration.GetBool("persistClaims"); }
-        }
-
-        public bool SecureCookie
-        {
-            get { return Configuration.GetBool("secureCookie"); }
-        }
-
-
-        public X509CertificateValidationMode CertificateValidationMode
-        {
-            get
-            {
-                X509CertificateValidationMode configuredValidationMode;
-                if (Enum.TryParse<X509CertificateValidationMode>(Configuration.GetString("issuerCertificateValidationMode"), true, out configuredValidationMode))
-                    return configuredValidationMode;
-
-                return _issuerCertificateValidationModeDefault;
-            }
-        }
-
-        public SubjectRecipientValidationMode SubjectRecipientValidationMode
-        {
-            get
-            {
-                SubjectRecipientValidationMode configuredValidationMode;
-                if (Enum.TryParse<SubjectRecipientValidationMode>(Configuration.GetString("subjectRecipientValidationMode"), true, out configuredValidationMode))
-                    return configuredValidationMode;
-
-                return _subjectRecipientValidationModeDefault;
-            }
-        }
-
-        public string TrustedIssuerThumbprint
-        {
-            get { return Configuration.GetString("issuerThumbprint"); }
-        }
-
-        public int ProfileRefreshInterval
-        {
-            get { return 1; }
-        }
-
-
+        public bool UseHttpContextUser => true;
+        public string UserNameAttributeName => Configuration.GetString("usernameClaim");
+        public string EmailAttributeName => Configuration.GetString("emailClaim");
+        public bool PersistClaims => Configuration.GetBool("persistClaims");
+        public bool SecureCookie => Configuration.GetBool("secureCookie");
+        public X509CertificateValidationMode CertificateValidationMode => Enum.TryParse<X509CertificateValidationMode>(Configuration.GetString("issuerCertificateValidationMode"), true, out var configuredValidationMode) ? configuredValidationMode : _issuerCertificateValidationModeDefault;
+        public SubjectRecipientValidationMode SubjectRecipientValidationMode => Enum.TryParse<SubjectRecipientValidationMode>(Configuration.GetString("subjectRecipientValidationMode"), true, out var configuredValidationMode) ? configuredValidationMode : _subjectRecipientValidationModeDefault;
+        public string TrustedIssuerThumbprint => Configuration.GetString("issuerThumbprint");
+        public int ProfileRefreshInterval => 1;
+        
         object _lock = new object();
 
         private TokenProcessor tokenProcessor = null;
@@ -700,20 +551,19 @@ namespace Telligent.Services.SamlAuthenticationPlugin
             if (!Enabled)
                 return null;
             //should have a SamlOAuthClient.oauthTokeyQuerystringKey which corresponds to the current cookie to decrypt
-            string tokenKey = HttpContext.Current.Request[SamlOAuthClient.oauthTokeyQuerystringKey];
+            string tokenKey = HttpContext.Current.Request[oauthTokeyQuerystringKey];
             if (!string.IsNullOrEmpty(tokenKey))
             {
-                var samlTokenData = SamlTokenData.GetFromSecureCookie(tokenKey);
+                var samlTokenData = SamlTokenData.GetTokenDataFromDatabase(tokenKey);
                 if (samlTokenData == null)
                     throw new ArgumentException("The SAML token was not found in the HttpContext.Current.Request, or could not be extracted.  Please ensure cookies are enabled and try again");
 
-
+                if(samlTokenData.IsExistingUser() || !PersistClaims)
+                    SamlTokenData.DeleteTokenDataFromDatabase(tokenKey);
                 //Store our token key so we can retrieve it later to raise the SamlUserCreated and SamlAuthenticated events and delete it
-                HttpCookie afterAuthenticatedCookie = new HttpCookie(clientType, tokenKey);
-                afterAuthenticatedCookie.HttpOnly = true;
+                var afterAuthenticatedCookie = new HttpCookie(clientType, tokenKey) {HttpOnly = true};
                 CookieHelper.AddCookie(afterAuthenticatedCookie);
-
-
+                
                 //this object is stored in temporary storage by the oauth handler, its guid is placed into the return url into the "TOKEN" placeholder.
                 //the expectation of this processing is the return url at this time is to the login page, and that any login based return url should be double encoded
                 return samlTokenData.GetOAuthData();
@@ -858,8 +708,6 @@ namespace Telligent.Services.SamlAuthenticationPlugin
         {
             get { return PluginCategories.ToArray(); }
         }
-
     }
-
 }
 

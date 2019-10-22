@@ -59,7 +59,7 @@ namespace Telligent.Services.SamlAuthenticationPlugin.Extensions
         {
             if (!MakeReadonly) return;
 
-            var samlTokenData = SqlData.GetSamlTokenData(e.Id.Value);
+            var samlTokenData = SqlData.GetSamlTokenStoreData(e.Id.Value);
             if (samlTokenData == null) return;
 
             var usersSamlTokenProfileData = GetSamlTokenProfileData(samlTokenData);
@@ -250,7 +250,7 @@ namespace Telligent.Services.SamlAuthenticationPlugin.Extensions
 
         }
 
-        private ApiList<Evolution.Extensibility.Api.Entities.Version1.UserProfileField> GetSamlProfileFields()
+        private ApiList<UserProfileField> GetSamlProfileFields()
         {
             var samlProfileFields = new ApiList<Evolution.Extensibility.Api.Entities.Version1.UserProfileField>();
             var allProfileFields = Apis.Get<IUserProfileFields>().List(new UserProfileFieldsListOptions() { PageSize = int.MaxValue });

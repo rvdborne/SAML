@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Configuration;
 using System.Data;
 using System.Data.SqlClient;
 using Telligent.Evolution.Extensibility;
@@ -14,7 +13,8 @@ namespace Telligent.Services.SamlAuthenticationPlugin
     /// </summary>
     public class SqlData
     {
-        static string databaseOwner = "dbo";
+        static readonly string databaseOwner = "dbo";
+        private static IEventLog _apiEventLog;
 
 
         #region Helper methods & properties
@@ -35,37 +35,111 @@ namespace Telligent.Services.SamlAuthenticationPlugin
         #endregion
 
         private SqlData()
-        { }
+        {
+            _apiEventLog = Apis.Get<IEventLog>();
+        }
+
+        public static void SaveEncryptedSamlToken(Guid tokenKey, string encryptedData)
+        {
+            try
+            {
+                using (var conn = GetSqlConnection())
+                {
+                    var sql = $"INSERT INTO [{databaseOwner}].[db_SamlTempTokenData]" +
+                              "(TokenKey" +
+                              ", EncryptedData)" +
+                              "VALUES" +
+                              "(@TokenKey" +
+                              ",@EncryptedData)";
+
+                    var myCommand = new SqlCommand(sql, conn) { CommandType = CommandType.Text };
+
+                    myCommand.Parameters.Add("@TokenKey", SqlDbType.UniqueIdentifier).Value = tokenKey;
+                    myCommand.Parameters.Add("@EncryptedData", SqlDbType.NVarChar).Value = encryptedData;
+
+                    conn.Open();
+                    myCommand.ExecuteNonQuery();
+                }
+            }
+            catch (Exception ex)
+            {
+                _apiEventLog.Write("Error inserting token into the db_SamlTempTokenData table. " + ex, new EventLogEntryWriteOptions() { Category = "SAML", EventId = 6023, EventType = "Error" });
+            }
+        }
+
+        public static string GetTokenData(string tokenKey)
+        {
+            try
+            {
+                using (var conn = GetSqlConnection())
+                {
+                    var sql =
+                        $"SELECT EncryptedData FROM [{databaseOwner}].[db_SamlTempTokenData] WHERE TokenKey = @TokenKey";
+
+                    var command = new SqlCommand(sql, conn) { CommandType = CommandType.Text };
+
+                    command.Parameters.Add("@TokenKey", SqlDbType.UniqueIdentifier).Value = Guid.Parse(tokenKey);
+                    conn.Open();
+
+                    return (string)command.ExecuteScalar();
+                }
+            }
+            catch (Exception ex)
+            {
+                _apiEventLog.Write("Error reading from db_SamlTempTokenData; I dont think its installed. " + ex, new EventLogEntryWriteOptions() { Category = "SAML", EventId = 6022, EventType = "Error" });
+                return string.Empty;
+            }
+        }
+
+        public static void DeleteTokenData(string tokenKey)
+        {
+            try
+            {
+                using (var conn = GetSqlConnection())
+                {
+                    var sql =
+                        $"DELETE FROM [{databaseOwner}].[db_SamlTempTokenData] WHERE TokenKey = @TokenKey";
+
+                    var command = new SqlCommand(sql, conn) { CommandType = CommandType.Text };
+
+                    command.Parameters.Add("@TokenKey", SqlDbType.UniqueIdentifier).Value = Guid.Parse(tokenKey);
+                    conn.Open();
+                    command.ExecuteNonQuery();
+                }
+            }
+            catch (Exception ex)
+            {
+                _apiEventLog.Write("Error deleting from db_SamlTokenData; I dont think its installed. " + ex, new EventLogEntryWriteOptions() { Category = "SAML", EventId = 6024, EventType = "Error" });
+            }
+        }
 
         public static void SaveSamlToken(SamlTokenData samlTokenData)
         {
             if (!samlTokenData.IsExistingUser()) throw new InvalidOperationException("The User Id must be greater than zero.");
 
-            if (GetSamlTokenData(samlTokenData.UserId) == null)
+            if (GetSamlTokenStoreData(samlTokenData.UserId) == null)
                 InsertSamlToken(samlTokenData);
             else
                 UpdateSamlToken(samlTokenData);
         }
 
-        public static SamlTokenData GetSamlTokenData(int userId)
+        public static SamlTokenData GetSamlTokenStoreData(int userId)
         {
             try
             {
-                using (SqlConnection myConnection = GetSqlConnection())
+                using (var myConnection = GetSqlConnection())
                 {
-                    string sql =
-                        string.Format(@"SELECT top 1 SamlOAuthData FROM [{0}].[db_SamlTokenStore] WHERE UserId = @userId ORDER BY ResponseDate Desc",
-                                      databaseOwner);
+                    var sql =
+                        $@"SELECT top 1 SamlOAuthData FROM [{databaseOwner}].[db_SamlTokenStore] WHERE UserId = @userId ORDER BY ResponseDate Desc";
 
-                    SqlCommand myCommand = new SqlCommand(sql, myConnection);
-                    myCommand.CommandType = CommandType.Text;
+                    var myCommand = new SqlCommand(sql, myConnection) {CommandType = CommandType.Text};
 
                     myCommand.Parameters.Add("@userId", SqlDbType.Int).Value = userId;
 
 
                     // Execute the command
                     myConnection.Open();
-                    object scalar = myCommand.ExecuteScalar();
+                    var scalar = myCommand.ExecuteScalar();
 
                     if (scalar == null)
                         return null;
@@ -77,7 +151,7 @@ namespace Telligent.Services.SamlAuthenticationPlugin
             }
             catch (Exception ex)
             {
-                Apis.Get<IEventLog>().Write("Error reading from db_SamlTokenStore; I dont think its installed. " + ex, new EventLogEntryWriteOptions { Category= "SAML",  EventId =  6011, EventType="Error"});
+                _apiEventLog.Write("Error reading from db_SamlTokenStore; I dont think its installed. " + ex, new EventLogEntryWriteOptions { Category= "SAML",  EventId =  6011, EventType="Error"});
             }
 
             return null;
@@ -88,21 +162,19 @@ namespace Telligent.Services.SamlAuthenticationPlugin
         private static void InsertSamlToken(SamlTokenData oAuthData)
         {
 
-            string oAuthDataXml = SamlHelpers.ConvertToString(oAuthData);
+            var oAuthDataXml = SamlHelpers.ConvertToString(oAuthData);
 
             InsertSamlToken(oAuthData.UserId, oAuthDataXml, oAuthData.ResponseDate, oAuthData.Email, oAuthData.NameId);
         }
-
 
         private static void InsertSamlToken(int userId, string oAuthData, DateTime responseDate, string email, string nameId)
         {
             try
             {
-                using (SqlConnection myConnection = GetSqlConnection())
+                using (var myConnection = GetSqlConnection())
                 {
-                    string sql =
-                        string.Format(
-                            @"INSERT INTO [{0}].[db_SamlTokenStore]
+                    var sql =
+                        $@"INSERT INTO [{databaseOwner}].[db_SamlTokenStore]
                            ([UserId]
                            ,[SamlOAuthData]
                            ,[ResponseDate]
@@ -113,11 +185,9 @@ namespace Telligent.Services.SamlAuthenticationPlugin
                            ,@samlOAuthData
                            ,@responseDate
                            ,@email
-                           ,@nameId)",
-                            databaseOwner);
+                           ,@nameId)";
 
-                    SqlCommand myCommand = new SqlCommand(sql, myConnection);
-                    myCommand.CommandType = CommandType.Text;
+                    var myCommand = new SqlCommand(sql, myConnection) {CommandType = CommandType.Text};
 
                     myCommand.Parameters.Add("@userId", SqlDbType.Int).Value = userId;
                     myCommand.Parameters.Add("@samlOAuthData", SqlDbType.Text).Value = oAuthData;
@@ -133,9 +203,8 @@ namespace Telligent.Services.SamlAuthenticationPlugin
             }
             catch (Exception ex)
             {
-                Apis.Get<IEventLog>().Write("Error inserting token into the db_SamlTokenStore. " + ex, new EventLogEntryWriteOptions { Category = "SAML", EventId = 6009, EventType = "Error" });
+                _apiEventLog.Write("Error inserting token into the db_SamlTokenStore. " + ex, new EventLogEntryWriteOptions { Category = "SAML", EventId = 6009, EventType = "Error" });
             }
-
         }
 
         #endregion
@@ -145,7 +214,7 @@ namespace Telligent.Services.SamlAuthenticationPlugin
         private static void UpdateSamlToken(SamlTokenData oAuthData)
         {
 
-            string oAuthDataXml = SamlHelpers.ConvertToString(oAuthData);
+            var oAuthDataXml = SamlHelpers.ConvertToString(oAuthData);
 
             UpdateSamlToken(oAuthData.UserId, oAuthDataXml, oAuthData.ResponseDate, oAuthData.Email, oAuthData.NameId);
         }
@@ -154,20 +223,17 @@ namespace Telligent.Services.SamlAuthenticationPlugin
         {
             try
             {
-                using (SqlConnection myConnection = GetSqlConnection())
+                using (var myConnection = GetSqlConnection())
                 {
-                    string sql =
-                        string.Format(
-                            @"UPDATE [{0}].[db_SamlTokenStore] SET
+                    var sql =
+                        $@"UPDATE [{databaseOwner}].[db_SamlTokenStore] SET
                            [SamlOAuthData] = @samlOAuthData
                            ,[ResponseDate] = @responseDate
                            ,[Email] = @email
                            ,[ClientId] = @nameId
-                           WHERE UserId = @userId",
-                            databaseOwner);
+                           WHERE UserId = @userId";
 
-                    SqlCommand myCommand = new SqlCommand(sql, myConnection);
-                    myCommand.CommandType = CommandType.Text;
+                    var myCommand = new SqlCommand(sql, myConnection) {CommandType = CommandType.Text};
 
                     myCommand.Parameters.Add("@userId", SqlDbType.Int).Value = userId;
                     myCommand.Parameters.Add("@samlOAuthData", SqlDbType.Text).Value = oAuthData;
@@ -183,21 +249,18 @@ namespace Telligent.Services.SamlAuthenticationPlugin
             }
             catch (Exception ex)
             {
-                Apis.Get<IEventLog>().Write("Error updating from db_SamlTokenStore. " + ex, new EventLogEntryWriteOptions { Category = "SAML", EventId = 6010, EventType = "Error" });
+                _apiEventLog.Write("Error updating from db_SamlTokenStore. " + ex, new EventLogEntryWriteOptions { Category = "SAML", EventId = 6010, EventType = "Error" });
             }
-
-       }
+        }
 
         #endregion
 
-
         public static int DeleteSamlTokenData(int userId)
         {
-            using (SqlConnection myConnection = GetSqlConnection())
+            using (var myConnection = GetSqlConnection())
             {
-                string sql = string.Format(@"DELETE FROM [{0}].[db_SamlTokenStore] WHERE UserId = @userId", databaseOwner);
-                var myCommand = new SqlCommand(sql, myConnection);
-                myCommand.CommandType = CommandType.Text;
+                var sql = $@"DELETE FROM [{databaseOwner}].[db_SamlTokenStore] WHERE UserId = @userId";
+                var myCommand = new SqlCommand(sql, myConnection) {CommandType = CommandType.Text};
 
                 myCommand.Parameters.Add("@userId", SqlDbType.Int).Value = userId;
 
@@ -212,18 +275,16 @@ namespace Telligent.Services.SamlAuthenticationPlugin
         {
             try
             {
-                using (SqlConnection myConnection = GetSqlConnection())
+                using (var myConnection = GetSqlConnection())
                 {
-                    string sql =
-                        string.Format(@"SELECT SamlOAuthData FROM [{0}].[db_SamlTokenStore] WHERE ClientId = @nameId",
-                                      databaseOwner);
+                    var sql =
+                        $@"SELECT SamlOAuthData FROM [{databaseOwner}].[db_SamlTokenStore] WHERE ClientId = @nameId";
 
-                    SqlCommand myCommand = new SqlCommand(sql, myConnection);
-                    myCommand.CommandType = CommandType.Text;
+                    var myCommand = new SqlCommand(sql, myConnection) {CommandType = CommandType.Text};
 
                     myCommand.Parameters.Add("@nameId", SqlDbType.NVarChar).Value = nameId;
 
-                    List<SamlTokenData> oAuthDatas = new List<SamlTokenData>();
+                    var oAuthDatas = new List<SamlTokenData>();
                     // Execute the command
                     myConnection.Open();
                     using (var dr = myCommand.ExecuteReader())
@@ -238,7 +299,7 @@ namespace Telligent.Services.SamlAuthenticationPlugin
             }
             catch (Exception ex)
             {
-                Apis.Get<IEventLog>().Write("Error reading from db_SamlTokenStore. " + ex, new EventLogEntryWriteOptions { Category= "SAML", EventId = 6012, EventType="Error"});
+                _apiEventLog.Write("Error reading from db_SamlTokenStore. " + ex, new EventLogEntryWriteOptions { Category= "SAML", EventId = 6012, EventType="Error"});
             }
 
             return null;
@@ -247,23 +308,38 @@ namespace Telligent.Services.SamlAuthenticationPlugin
         #region Install / Upgrade Pattern
         internal static bool IsInstalled()
         {
-            return IsSamlTokenStoreInstalled();
+            return IsSamlTokenStoreInstalled() && IsSamlTokenDataInstalled();
         }
+
         internal static bool IsSamlTokenStoreInstalled()
         {
-            using (SqlConnection myConnection = GetSqlConnection())
+            using (var myConnection = GetSqlConnection())
             {
-                string sql = string.Format(@"select * from dbo.sysobjects where id = object_id(N'[{0}].[db_SamlTokenStore]') and OBJECTPROPERTY(id, N'IsTable') = 1", databaseOwner);
+                var sql =
+                    $@"select * from dbo.sysobjects where id = object_id(N'[{databaseOwner}].[db_SamlTokenStore]') and OBJECTPROPERTY(id, N'IsTable') = 1";
 
-                SqlCommand myCommand = new SqlCommand(sql, myConnection);
-                myCommand.CommandType = CommandType.Text;
+                var myCommand = new SqlCommand(sql, myConnection) {CommandType = CommandType.Text};
 
                 // Execute the command
                 myConnection.Open();
-                SqlDataReader dr = myCommand.ExecuteReader();
+                var dr = myCommand.ExecuteReader();
 
                 return dr.Read();
 
+            }
+        }
+
+        internal static bool IsSamlTokenDataInstalled()
+        {
+            using (var conn = GetSqlConnection())
+            {
+                var sql =
+                    $"SELECT * FROM dbo.sysobjects WHERE id = object_id(N'[{databaseOwner}].[db_SamlTokenData]') AND OBJECTPROPERTY(id, N'IsTable') = 1";
+
+                var command = new SqlCommand(sql, conn) { CommandType = CommandType.Text };
+                conn.Open();
+                var dr = command.ExecuteReader();
+                return dr.Read();
             }
         }
 
@@ -271,7 +347,6 @@ namespace Telligent.Services.SamlAuthenticationPlugin
         {
             return !HasEmailCol();
         }
-
 
         public static void Upgrade()
         {
@@ -286,15 +361,15 @@ namespace Telligent.Services.SamlAuthenticationPlugin
 
         public static bool HasEmailCol()
         {
-            using (SqlConnection myConnection = GetSqlConnection())
+            using (var myConnection = GetSqlConnection())
             {
-                string sql = string.Format(@"select * from sys.columns where Name = N'Email' and Object_ID = object_id(N'[{0}].[db_SamlTokenStore]')", databaseOwner);
-                SqlCommand myCommand = new SqlCommand(sql, myConnection);
-                myCommand.CommandType = CommandType.Text;
+                var sql =
+                    $@"select * from sys.columns where Name = N'Email' and Object_ID = object_id(N'[{databaseOwner}].[db_SamlTokenStore]')";
+                var myCommand = new SqlCommand(sql, myConnection) {CommandType = CommandType.Text};
 
                 // Execute the command
                 myConnection.Open();
-                SqlDataReader dr = myCommand.ExecuteReader();
+                var dr = myCommand.ExecuteReader();
 
                 return dr.Read();
             }
@@ -302,11 +377,11 @@ namespace Telligent.Services.SamlAuthenticationPlugin
 
         public static int AddEmailCol()
         {
-            using (SqlConnection myConnection = GetSqlConnection())
+            using (var myConnection = GetSqlConnection())
             {
-                string sql = string.Format(@"ALTER TABLE [{0}].[db_SamlTokenStore] ADD [ClientId] [nvarchar](256) NULL, [Email] [nvarchar](1024) NULL", databaseOwner);
-                SqlCommand myCommand = new SqlCommand(sql, myConnection);
-                myCommand.CommandType = CommandType.Text;
+                var sql =
+                    $@"ALTER TABLE [{databaseOwner}].[db_SamlTokenStore] ADD [ClientId] [nvarchar](256) NULL, [Email] [nvarchar](1024) NULL";
+                var myCommand = new SqlCommand(sql, myConnection) {CommandType = CommandType.Text};
 
                 // Execute the command
                 myConnection.Open();
@@ -317,11 +392,11 @@ namespace Telligent.Services.SamlAuthenticationPlugin
 
         public static int PopulateEmailCol()
         {
-            using (SqlConnection myConnection = GetSqlConnection())
+            using (var myConnection = GetSqlConnection())
             {
-                string sql = string.Format(@"UPDATE [{0}].[db_SamlTokenStore] SET Email = convert(XML,SUBSTRING([SamlOAuthData], 39, DATALENGTH([SamlOAuthData]))).value('(/SamlOAuthData/Email)[1]', 'varchar(1000)'), ClientId = convert(XML,SUBSTRING([SamlOAuthData], 39, DATALENGTH([SamlOAuthData]))).value('(/SamlOAuthData/ClientId)[1]', 'varchar(1000)')", databaseOwner);
-                SqlCommand myCommand = new SqlCommand(sql, myConnection);
-                myCommand.CommandType = CommandType.Text;
+                var sql =
+                    $@"UPDATE [{databaseOwner}].[db_SamlTokenStore] SET Email = convert(XML,SUBSTRING([SamlOAuthData], 39, DATALENGTH([SamlOAuthData]))).value('(/SamlOAuthData/Email)[1]', 'varchar(1000)'), ClientId = convert(XML,SUBSTRING([SamlOAuthData], 39, DATALENGTH([SamlOAuthData]))).value('(/SamlOAuthData/ClientId)[1]', 'varchar(1000)')";
+                var myCommand = new SqlCommand(sql, myConnection) {CommandType = CommandType.Text};
 
                 // Execute the command
                 myConnection.Open();
@@ -332,15 +407,15 @@ namespace Telligent.Services.SamlAuthenticationPlugin
 
         public static int SetDefaultsEmailCol()
         {
-            using (SqlConnection myConnection = GetSqlConnection())
+            using (var myConnection = GetSqlConnection())
             {
-                string sql1 = string.Format(@"ALTER TABLE [{0}].[db_SamlTokenStore] ALTER COLUMN [ClientId] [nvarchar](256) NOT NULL", databaseOwner);
-                string sql2 = string.Format(@"ALTER TABLE [{0}].[db_SamlTokenStore] ALTER COLUMN [Email] [nvarchar](1024) NOT NULL", databaseOwner);
-                SqlCommand myCommand1 = new SqlCommand(sql1, myConnection);
-                myCommand1.CommandType = CommandType.Text;
+                var sql1 =
+                    $@"ALTER TABLE [{databaseOwner}].[db_SamlTokenStore] ALTER COLUMN [ClientId] [nvarchar](256) NOT NULL";
+                var sql2 =
+                    $@"ALTER TABLE [{databaseOwner}].[db_SamlTokenStore] ALTER COLUMN [Email] [nvarchar](1024) NOT NULL";
+                var myCommand1 = new SqlCommand(sql1, myConnection) {CommandType = CommandType.Text};
 
-                SqlCommand myCommand2 = new SqlCommand(sql2, myConnection);
-                myCommand2.CommandType = CommandType.Text;
+                var myCommand2 = new SqlCommand(sql2, myConnection) {CommandType = CommandType.Text};
 
                 // Execute the command
                 myConnection.Open();
@@ -348,52 +423,49 @@ namespace Telligent.Services.SamlAuthenticationPlugin
             }
         }
 
-
         public static int AddEmailColKey()
         {
             using (var myConnection = GetSqlConnection())
             {
-                var sql = string.Format(@"ALTER TABLE [{0}].[db_SamlTokenStore] DROP CONSTRAINT [PK_db_SamlTokenStore]", databaseOwner);
-                var myCommand = new SqlCommand(sql, myConnection);
-                myCommand.CommandType = CommandType.Text;
+                var sql = $@"ALTER TABLE [{databaseOwner}].[db_SamlTokenStore] DROP CONSTRAINT [PK_db_SamlTokenStore]";
+                var myCommand = new SqlCommand(sql, myConnection) {CommandType = CommandType.Text};
 
-                var sql2 = string.Format(@"ALTER TABLE [{0}].[db_SamlTokenStore] ADD CONSTRAINT [PK_db_SamlTokenStore] PRIMARY KEY CLUSTERED 
+                var sql2 =
+                    $@"ALTER TABLE [{databaseOwner}].[db_SamlTokenStore] ADD CONSTRAINT [PK_db_SamlTokenStore] PRIMARY KEY CLUSTERED 
 					                                        (
 						                                        [UserId] ASC,
 						                                        [ClientId] ASC
-					                                        )ON [PRIMARY]", databaseOwner);
+					                                        )ON [PRIMARY]";
                 var myCommand2 = new SqlCommand(sql2, myConnection);
                 myCommand2.CommandType = CommandType.Text;
 
-                var sql3 = string.Format(@"CREATE INDEX [IX_db_SamlTokenStore_UserId] ON [{0}].[db_SamlTokenStore]
+                var sql3 = $@"CREATE INDEX [IX_db_SamlTokenStore_UserId] ON [{databaseOwner}].[db_SamlTokenStore]
                                                                 (
 	                                                                [UserId], [ResponseDate] DESC
-                                                                ) ON [PRIMARY]", databaseOwner);
+                                                                ) ON [PRIMARY]";
 
-                var myCommand3 = new SqlCommand(sql3, myConnection);
-                myCommand3.CommandType = CommandType.Text;
-
-
+                var myCommand3 = new SqlCommand(sql3, myConnection) {CommandType = CommandType.Text};
 
                 // Execute the command
                 myConnection.Open();
                 return myCommand.ExecuteNonQuery() + myCommand2.ExecuteNonQuery() + myCommand3.ExecuteNonQuery();
-
             }
         }
 
-
         internal static void Install()
         {
-            if(!IsSamlTokenStoreInstalled())
+            if (!IsSamlTokenStoreInstalled())
                 InstallSamlTokenStore();
+
+            if (!IsSamlTokenDataInstalled())
+                InstallSamlTokenDataStore();
         }
 
         internal static int InstallSamlTokenStore()
         {
-            using (SqlConnection myConnection = GetSqlConnection())
+            using (var myConnection = GetSqlConnection())
             {
-                var sql1 = string.Format(@"CREATE TABLE [{0}].[db_SamlTokenStore](
+                var sql1 = $@"CREATE TABLE [{databaseOwner}].[db_SamlTokenStore](
 	                    [UserId] [int] NOT NULL,
                         [ClientId] [varchar](256) NOT NULL, 
                         [Email] [nvarchar](1024) NOT NULL,
@@ -407,27 +479,33 @@ namespace Telligent.Services.SamlAuthenticationPlugin
                     CONSTRAINT [UC_db_SamlTokenStore_ClientId] UNIQUE NONCLUSTERED 
                     (
                         [ClientId] ASC
-                    ) ON [PRIMARY]);CREATE INDEX [IX_db_SamlTokenStore_UserId] ON [{0}].[db_SamlTokenStore]
+                    ) ON [PRIMARY]);CREATE INDEX [IX_db_SamlTokenStore_UserId] ON [{databaseOwner}].[db_SamlTokenStore]
                     (
 	                    [UserId], [ResponseDate] DESC
-                    )ON [PRIMARY]", databaseOwner);
+                    )ON [PRIMARY]";
 
-                var myCommand1 = new SqlCommand(sql1, myConnection);
-                myCommand1.CommandType = CommandType.Text;
+                var myCommand1 = new SqlCommand(sql1, myConnection) {CommandType = CommandType.Text};
 
                 // Execute the command
                 myConnection.Open();
                 return myCommand1.ExecuteNonQuery();
-
             }
         }
-        
 
+        internal static int InstallSamlTokenDataStore()
+        {
+            using (var conn = GetSqlConnection())
+            {
+                var sql =
+                    $"CREATE TABLE [{databaseOwner}].[db_SamlTempTokenData]([TokenKey] [uniqueidentifier] NOT NULL, [EncryptedData] [text] NOT NULL) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]";
+
+                var command = new SqlCommand(sql, conn) { CommandType = CommandType.Text };
+                conn.Open();
+                return command.ExecuteNonQuery();
+            }
+        }
 
         #endregion
-
     }
-
-
 }
 

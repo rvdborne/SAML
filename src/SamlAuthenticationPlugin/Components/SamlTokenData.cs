@@ -13,7 +13,7 @@ namespace Telligent.Services.SamlAuthenticationPlugin.Components
     [XmlInclude(typeof(SamlAttribute))]
     public class SamlTokenData
     {
-
+        private static readonly IEventLog ApiEventLog = Apis.Get<IEventLog>();
         public SamlTokenData()
         {
             UserId = 0;
@@ -165,6 +165,41 @@ namespace Telligent.Services.SamlAuthenticationPlugin.Components
         
         }
 
+        internal string SaveTokenDataToDatabase()
+        {
+            var tokenKey = Guid.NewGuid();
+            var samlXml = SamlHelpers.ConvertToString(this);
+            var encryptedToken = SamlHelpers.Protect(samlXml, GetType().Name);
+
+            SqlData.SaveEncryptedSamlToken(tokenKey, encryptedToken);
+
+            return tokenKey.ToString();
+        }
+
+        internal static SamlTokenData GetTokenDataFromDatabase(string tokenKey)
+        {
+            try
+            {
+                var encryptedData = SqlData.GetTokenData(tokenKey);
+                if (!string.IsNullOrEmpty(encryptedData))
+                {
+                    var samlXml = SamlHelpers.Unprotect(encryptedData, typeof(SamlTokenData).Name);
+                    var samlTokenData = SamlHelpers.Deserialize<SamlTokenData>(samlXml);
+                    return samlTokenData;
+                }
+            }
+            catch (Exception ex)
+            {
+                ApiEventLog.Write("Error Extracting SAML token from database:" + ex, new EventLogEntryWriteOptions() { Category = "SAML", EventType = "Error", EventId = 1001 });
+            }
+
+            return null;
+        }
+
+        internal static void DeleteTokenDataFromDatabase(string tokenKey)
+        {
+            SqlData.DeleteTokenData(tokenKey);
+        }
 
         internal string SaveToSecureCookie()
         {

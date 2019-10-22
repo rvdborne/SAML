@@ -8,7 +8,6 @@ using System.Web.Security;
 using System.Web.UI;
 using System.Xml;
 using System.Xml.Serialization;
-using Telligent.Evolution.Api.Services;
 using Telligent.Evolution.Extensibility.Api.Version1;
 using Telligent.Services.SamlAuthenticationPlugin.Components;
 using System.IO;
@@ -22,7 +21,7 @@ namespace Telligent.Services.SamlAuthenticationPlugin
         public const string ReturnUrlCookieName = "SamlAuthenticationReturnUrl";
         public const string ReturnUrlParameterName = "ReturnUrl";
         public const string InvitationKeyParameterName = "InvitationKey";
-        public static string[] ExtensionPluginCategories = new string[] { "SAML", "External Authentication", "SAML Extension" }; //leverage this for extensions to make them easier to find
+        public static string[] ExtensionPluginCategories = { "SAML", "External Authentication", "SAML Extension" }; //leverage this for extensions to make them easier to find
 
         public static bool IsSignInResponse
         {
@@ -71,9 +70,7 @@ namespace Telligent.Services.SamlAuthenticationPlugin
                 return null;
             }
         }
-
-
-
+        
         public static ClaimsPrincipal ClaimsPrincipalContextItem
         {
             get
@@ -135,8 +132,7 @@ namespace Telligent.Services.SamlAuthenticationPlugin
         {
             return CachedPage.ClientScript.GetWebResourceUrl(type, resource);
         }
-
-
+        
         #region Return Url
 
         public static void SetCookieReturnUrl(string returnUrl, Guid? invitationKey)
@@ -167,7 +163,10 @@ namespace Telligent.Services.SamlAuthenticationPlugin
             if (string.IsNullOrEmpty(returnUrl)) //try the querstring if its not in the cookie
                 returnUrl = HttpUtility.UrlEncode(HttpContext.Current.Request[ReturnUrlParameterName]);
             if (string.IsNullOrEmpty(returnUrl)) //site root if its not in the cookie or querystring
-                returnUrl = "/";
+            {
+                var currentUrl = HttpContext.Current.Request.Url.PathAndQuery;
+                returnUrl = !string.IsNullOrEmpty(currentUrl) ? HttpUtility.UrlEncode(currentUrl) : "/";
+            }
 
             return returnUrl;
         }

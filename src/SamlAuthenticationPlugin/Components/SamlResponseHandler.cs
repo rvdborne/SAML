@@ -22,7 +22,6 @@ namespace Telligent.Services.SamlAuthenticationPlugin.Components
 
             if (SamlHelpers.IsSignInResponse)
             {
-
                 //use httpcontextuser is set to true, so this code below will only ever fire if there is a HttpContextUser set
                 SamlTokenData samlTokenData = null;
 
@@ -51,8 +50,10 @@ namespace Telligent.Services.SamlAuthenticationPlugin.Components
                 }
 
                 //Store out the SAML Token Data in an encrypted cookie for use on the OAuth endpoint which requires a GET request
-                var tokenKey = samlTokenData.SaveToSecureCookie();
-
+                //var tokenKey = samlTokenData.SaveToSecureCookie();
+                //Store out the SAML Token Data in a table on the database for use in the OAuth endpoint which requires a GET request
+                //This was added to prevent issues with cookie size - Tony Triguero 2/14/2019
+                var tokenKey = samlTokenData.SaveTokenDataToDatabase();
 
                 //build the oauth url based on the current url
                 UriBuilder oAuthUrl = new UriBuilder(context.Request.Url);
