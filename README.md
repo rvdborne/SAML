@@ -31,7 +31,7 @@ To use this plugin, your SAML token must support the following claims (exact cla
 
 There are also extensibility points for custom username and display name handling during the authentication  lifecycle.
 
-### Exclusions
+#### Exclusions
 Does not include the following:
 * Artefact binding
 
