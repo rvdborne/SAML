@@ -31,6 +31,10 @@ To use this plugin, your SAML token must support the following claims (exact cla
 
 There are also extensibility points for custom username and display name handling during the authentication  lifecycle.
 
+#### Exclusions
+Does not include the following:
+* Artefact binding
+
 #### Documentation:
 
 Please refer to the [Wiki](https://github.com/Telligent/SAML/wiki) in this repository for additional documentation.
