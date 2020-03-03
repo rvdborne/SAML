@@ -137,10 +137,10 @@ namespace Telligent.Services.SamlAuthenticationPlugin
 
         public static void SetCookieReturnUrl(string returnUrl, Guid? invitationKey)
         {
-            HttpCookie returnUrlCookie = new HttpCookie(ReturnUrlCookieName);
+            var returnUrlCookie = new HttpCookie(ReturnUrlCookieName);
             returnUrlCookie.Values[ReturnUrlParameterName] = returnUrl;
             if (invitationKey.HasValue && invitationKey.Value != Guid.Empty)
-                returnUrlCookie.Values[SamlHelpers.InvitationKeyParameterName] = invitationKey.Value.ToString();
+                returnUrlCookie.Values[InvitationKeyParameterName] = invitationKey.Value.ToString();
 
             HttpContext.Current.Response.Cookies.Add(returnUrlCookie);
         }
@@ -148,7 +148,7 @@ namespace Telligent.Services.SamlAuthenticationPlugin
 
         public static string GetCookieReturnUrl()
         {
-            HttpCookie returnUrlCookie = HttpContext.Current.Request.Cookies[ReturnUrlCookieName];
+            var returnUrlCookie = HttpContext.Current.Request.Cookies[ReturnUrlCookieName];
             if (returnUrlCookie != null && returnUrlCookie.Values[ReturnUrlParameterName] != null && !string.IsNullOrEmpty(returnUrlCookie.Values[ReturnUrlParameterName]))
             {
                 return returnUrlCookie.Values[ReturnUrlParameterName];
@@ -160,11 +160,12 @@ namespace Telligent.Services.SamlAuthenticationPlugin
         public static string GetReturnUrl()
         {
             string returnUrl = GetCookieReturnUrl();
-            if (string.IsNullOrEmpty(returnUrl)) //try the querstring if its not in the cookie
+            if (string.IsNullOrEmpty(returnUrl)) //try the querystring if its not in the cookie
                 returnUrl = HttpUtility.UrlEncode(HttpContext.Current.Request[ReturnUrlParameterName]);
             if (string.IsNullOrEmpty(returnUrl)) //site root if its not in the cookie or querystring
             {
-                var currentUrl = HttpContext.Current.Request.Url.PathAndQuery;
+                var currentUrl = HttpContext.Current.Request.Url.PathAndQuery.Contains("samlauthn") ? "/" : HttpContext.Current.Request.Url.PathAndQuery;
+                
                 returnUrl = !string.IsNullOrEmpty(currentUrl) ? HttpUtility.UrlEncode(currentUrl) : "/";
             }
 
@@ -253,7 +254,7 @@ namespace Telligent.Services.SamlAuthenticationPlugin
 
         public static void ClearCookieReturnUrl()
         {
-            HttpCookie responseCookie = HttpContext.Current.Response.Cookies[ReturnUrlCookieName];
+            var responseCookie = HttpContext.Current.Response.Cookies[ReturnUrlCookieName];
             if (responseCookie != null)
                 responseCookie.Expires = DateTime.Now.AddYears(-30);
         }

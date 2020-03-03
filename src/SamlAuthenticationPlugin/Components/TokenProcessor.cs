@@ -31,7 +31,7 @@ namespace Telligent.Services.SamlAuthenticationPlugin.Components
         public virtual SamlTokenData GetSamlTokenData()
         {
             var samlUserLookup = PluginManager.GetSingleton<ISamlUserLookup>();
-            var dispalyNameGenerator = PluginManager.GetSingleton<ISamlDisplayNameGenerator>();
+            var displayNameGenerator = PluginManager.GetSingleton<ISamlDisplayNameGenerator>();
             var usernameGenerator = PluginManager.GetSingleton<ISamlUsernameGenerator>();
             var samlTokenValidator = PluginManager.GetSingleton<ISamlTokenDataValidator>();
             var apiUsers = Apis.Get<IUsers>();
@@ -60,8 +60,8 @@ namespace Telligent.Services.SamlAuthenticationPlugin.Components
                 samlTokenData.UserName = samlTokenData.GetAttribute(tokenProcessorConfiguration.UserNameAttributeName);
 
             //check if we have a custom display name plugin and execute it now to populate the commonname attribue
-            if (dispalyNameGenerator != null && dispalyNameGenerator.Enabled)
-                samlTokenData = dispalyNameGenerator.GenerateDisplayName(samlTokenData);
+            if (displayNameGenerator != null && displayNameGenerator.Enabled)
+                samlTokenData = displayNameGenerator.GenerateDisplayName(samlTokenData);
 
 
             if (!samlTokenData.IsExistingUser()) //only run if the ISamlUserLookup didnt already give us the UserId

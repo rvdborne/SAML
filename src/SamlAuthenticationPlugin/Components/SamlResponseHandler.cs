@@ -32,7 +32,7 @@ namespace Telligent.Services.SamlAuthenticationPlugin.Components
                 samlTokenData = samlPlugin.TokenProcessor.GetSamlTokenData();
 
                 if (samlTokenData == null)
-                    throw new InvalidOperationException("No valid saml token was decected, login failed");
+                    throw new InvalidOperationException("No valid saml token was detected, login failed");
 
                 if (samlTokenData.IsExistingUser())
                 {
@@ -65,9 +65,18 @@ namespace Telligent.Services.SamlAuthenticationPlugin.Components
                 queryString.Add(SamlOAuthClient.oauthTokeyQuerystringKey, tokenKey.ToString());
 
                 //Invitation Key
-                string invitationKey = SamlHelpers.GetInvitationKey();
-                if (!String.IsNullOrEmpty(invitationKey) && !queryString.ToString().ToLower().Contains("invitationkey="))
+                var invitationKey = SamlHelpers.GetInvitationKey();
+                if (!string.IsNullOrEmpty(invitationKey) &&
+                    !queryString.ToString().ToLower().Contains("invitationkey="))
+                {
                     queryString.Add(SamlHelpers.InvitationKeyParameterName, invitationKey);
+
+                    var samlInvitationManager = PluginManager.GetSingleton<ISamlInvitationManager>();
+                    if (samlInvitationManager != null && samlInvitationManager.Enabled)
+                    {
+                        samlInvitationManager.ManageInvitation(samlTokenData, invitationKey);
+                    }
+                }
 
                 //Return Url  (note this must return back to the login page, the actual final return url should be double encoded)
                 string returnUrl = GetReturnUrl();
@@ -127,7 +136,7 @@ namespace Telligent.Services.SamlAuthenticationPlugin.Components
 
         internal string GetReturnUrl()
         {
-            string returnUrl = SamlHelpers.GetCookieReturnUrl();
+            var returnUrl = SamlHelpers.GetCookieReturnUrl();
 
             SamlHelpers.ClearCookieReturnUrl();
 

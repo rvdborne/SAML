@@ -370,6 +370,8 @@
     <Compile Include="Components\SamlTokenData.cs" />
     <Compile Include="Components\TokenProcessor.cs" />
     <Compile Include="Extensibility\Events\ISamlEventExecutor.cs" />
+    <Compile Include="Extensibility\Events\SamlBeforeAuthenticateEventArgs.cs" />
+    <Compile Include="Extensibility\ISamlInvitationManager.cs" />
     <Compile Include="Extensibility\ISamlOAuthLinkManager.cs" />
     <Compile Include="Extensibility\IPlatformLogout.cs" />
     <Compile Include="Extensibility\Events\SamlAfterUserCreateEventArgs.cs" />
@@ -429,7 +431,7 @@
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PostBuildEvent>rem xcopy $(TargetDir)$(TargetFileName) $(SolutionDir)..\install\$(TargetFileName) /s/e/y</PostBuildEvent>
+    <PostBuildEvent>xcopy /y /d  "$(ProjectDir)\bin\Debug\Telligent.Services.*.*" "C:\Dev\TIM\Communities\local.11-dev.com\Web\bin"</PostBuildEvent>
   </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

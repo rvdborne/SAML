@@ -27,8 +27,7 @@ namespace Telligent.Services.SamlAuthenticationPlugin.Components
 
         public void ProcessRequest(HttpContext context)
         {
-
-            string returnUrl = "/";
+            var returnUrl = "/";
             
             //protect against no httpcontext or cs context
             try
@@ -47,7 +46,11 @@ namespace Telligent.Services.SamlAuthenticationPlugin.Components
                 //note we still have the case where the invitation may be in the return url
 
                 var returnUrlParam = context.Request.QueryString[SamlHelpers.ReturnUrlParameterName];
-                if (IsValidReturnUrl(returnUrlParam)) //ignores pages like logout or register or errors
+                if (string.IsNullOrEmpty(returnUrlParam))
+                {
+                    returnUrl = SamlHelpers.GetReturnUrl();
+                }
+                else if(IsValidReturnUrl(returnUrlParam)) //ignores pages like logout or register or errors
                 {
                     returnUrl = context.Request[SamlHelpers.ReturnUrlParameterName];
                     //if there is more than one return url, just use the first
@@ -118,13 +121,6 @@ namespace Telligent.Services.SamlAuthenticationPlugin.Components
                     break;
 
             }
-
-
-
-
-
-
-
         }
 
         private void ValidateXML(string authNXml)

@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using PublicEntity = Telligent.Evolution.Extensibility.Api.Entities.Version1.User;
-using Telligent.Evolution.Extensibility.Api.Version1;
+﻿using PublicEntity = Telligent.Evolution.Extensibility.Api.Entities.Version1.User;
 using Telligent.Services.SamlAuthenticationPlugin.Components;
 using Telligent.Evolution.Extensibility.Events.Version1;
 

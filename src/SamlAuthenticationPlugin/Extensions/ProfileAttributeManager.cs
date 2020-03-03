@@ -119,8 +119,7 @@ namespace Telligent.Services.SamlAuthenticationPlugin.Extensions
             });
 
         }
-
-
+        
         private Dictionary<string, string> GetSamlTokenProfileData(SamlTokenData samlTokenData)
         {
             var extractedProfileData = new Dictionary<string, string>();
@@ -148,9 +147,7 @@ namespace Telligent.Services.SamlAuthenticationPlugin.Extensions
 
             return extractedProfileData;
         }
-
-
-
+        
         private void CreateMissingProfileFields(IEnumerable<string> profileFieldNames)
         {
             var profileFieldTypePlainText = _userProfileFields.ProfileFieldTypes.Where(i => i.Name == "Plain Text").FirstOrDefault();  //type 4
@@ -225,15 +222,12 @@ namespace Telligent.Services.SamlAuthenticationPlugin.Extensions
                 return null;
             }
         }
-
-
-
+        
         public string[] Categories
         {
             get { return SamlHelpers.ExtensionPluginCategories; }
         }
-
-
+        
         #endregion
 
         private void UpdateProfileFields(int userId, IList<ProfileField> profileFields)

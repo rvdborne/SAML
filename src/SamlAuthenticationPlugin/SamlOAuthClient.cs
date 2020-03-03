@@ -574,9 +574,7 @@ namespace Telligent.Services.SamlAuthenticationPlugin
             throw new ArgumentException("The SAML token was not found in the HttpContext.Current.Request, please check the configuration and try again");
 
         }
-
-
-
+        
         public string ThemeColor
         {
             get { return "006699"; }
