@@ -334,7 +334,7 @@ namespace Telligent.Services.SamlAuthenticationPlugin
             using (var conn = GetSqlConnection())
             {
                 var sql =
-                    $"SELECT * FROM dbo.sysobjects WHERE id = object_id(N'[{databaseOwner}].[db_SamlTokenData]') AND OBJECTPROPERTY(id, N'IsTable') = 1";
+                    $"SELECT * FROM dbo.sysobjects WHERE id = object_id(N'[{databaseOwner}].[db_SamlTempTokenData]') AND OBJECTPROPERTY(id, N'IsTable') = 1";
 
                 var command = new SqlCommand(sql, conn) { CommandType = CommandType.Text };
                 conn.Open();
