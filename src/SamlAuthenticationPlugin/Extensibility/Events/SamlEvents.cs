@@ -7,19 +7,9 @@ namespace Telligent.Services.SamlAuthenticationPlugin.Extensibility.Events
     public class SamlEvents: EventsBase, ISamlEventExecutor
     {
         //use a static singleton patter to avoid using internal telligent IServiceLoader
-        private static SamlEvents instance;
+        private static SamlEvents _instance;
 
-        public static SamlEvents Instance
-        {
-            get
-            {
-                if (instance == null)
-                {
-                    instance = new SamlEvents();
-                }
-                return instance;
-            }
-        }
+        public static SamlEvents Instance => _instance ?? (_instance = new SamlEvents());
 
         private SamlEvents() : base()
         {

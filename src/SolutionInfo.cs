@@ -11,7 +11,5 @@ using System.Reflection;
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-[assembly: AssemblyVersionAttribute("1.22.2009.22")]
-[assembly: AssemblyFileVersionAttribute("1.22.2009.22")]
-
-
+[assembly: AssemblyVersionAttribute("8.11.2013.29")]
+[assembly: AssemblyFileVersionAttribute("8.11.2013.29")]

@@ -231,7 +231,6 @@ namespace Telligent.Services.SamlAuthenticationPlugin
 
             //update the samlTokenData now that we know the user ID and cleanup the cookie used by the login
             samlTokenData.UserId = e.Id.Value;
-            CookieHelper.DeleteCookie(afterCreatedCookie.Value);
 
             //Update the cookie SAMLToken Data to have the UserId now that its an existing user to fire the after authenticated events (which also removes the cookie)
             var tokenKey = samlTokenData.SaveTokenDataToDatabase();
@@ -558,8 +557,6 @@ namespace Telligent.Services.SamlAuthenticationPlugin
                 if (samlTokenData == null)
                     throw new ArgumentException("The SAML token was not found in the HttpContext.Current.Request, or could not be extracted.  Please ensure cookies are enabled and try again");
 
-                if(samlTokenData.IsExistingUser() || !PersistClaims)
-                    SamlTokenData.DeleteTokenDataFromDatabase(tokenKey);
                 //Store our token key so we can retrieve it later to raise the SamlUserCreated and SamlAuthenticated events and delete it
                 var afterAuthenticatedCookie = new HttpCookie(clientType, tokenKey) {HttpOnly = true};
                 CookieHelper.AddCookie(afterAuthenticatedCookie);
