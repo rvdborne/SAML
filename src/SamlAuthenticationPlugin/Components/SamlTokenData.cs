@@ -207,10 +207,13 @@ namespace Telligent.Services.SamlAuthenticationPlugin.Components
             string samlXml = SamlHelpers.ConvertToString(this);
             var encryptedToken = SamlHelpers.Protect(samlXml, this.GetType().Name);
 
-            HttpCookie cookie = new HttpCookie(tokenKey.ToString(), encryptedToken);
-            cookie.HttpOnly = true;
-            cookie.Secure = HttpContext.Current.Request.IsSecureConnection;
-            
+            HttpCookie cookie = new HttpCookie(tokenKey.ToString(), encryptedToken)
+            {
+                HttpOnly = true,
+                Secure = HttpContext.Current.Request.IsSecureConnection,
+                Expires = DateTime.Now.AddHours(8)
+            };
+
             CookieHelper.AddCookie(cookie);
 
             return tokenKey.ToString();

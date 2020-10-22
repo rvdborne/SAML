@@ -57,6 +57,7 @@ namespace Telligent.Services.SamlAuthenticationPlugin
         }
 
         public string Description
+
         {
             get { return "Allows single-sign-on by converting SAML Tokens into OAuth tokens."; }
         }
@@ -234,8 +235,11 @@ namespace Telligent.Services.SamlAuthenticationPlugin
 
             //Update the cookie SAMLToken Data to have the UserId now that its an existing user to fire the after authenticated events (which also removes the cookie)
             var tokenKey = samlTokenData.SaveTokenDataToDatabase();
-            var afterAuthenticatedCookie = new HttpCookie(clientType, tokenKey);
-            afterAuthenticatedCookie.HttpOnly = true;
+            var afterAuthenticatedCookie = new HttpCookie(clientType, tokenKey)
+            {
+                Expires = DateTime.Now.AddHours(8), 
+                HttpOnly = true
+            };
             CookieHelper.AddCookie(afterAuthenticatedCookie);
 
             if (PersistClaims)
@@ -558,7 +562,7 @@ namespace Telligent.Services.SamlAuthenticationPlugin
                     throw new ArgumentException("The SAML token was not found in the HttpContext.Current.Request, or could not be extracted.  Please ensure cookies are enabled and try again");
 
                 //Store our token key so we can retrieve it later to raise the SamlUserCreated and SamlAuthenticated events and delete it
-                var afterAuthenticatedCookie = new HttpCookie(clientType, tokenKey) {HttpOnly = true};
+                var afterAuthenticatedCookie = new HttpCookie(clientType, tokenKey) {HttpOnly = true, Expires = DateTime.Now.AddHours(8)};
                 CookieHelper.AddCookie(afterAuthenticatedCookie);
                 
                 //this object is stored in temporary storage by the oauth handler, its guid is placed into the return url into the "TOKEN" placeholder.
