@@ -190,7 +190,7 @@ namespace Telligent.Services.SamlAuthenticationPlugin
 
             if (string.IsNullOrEmpty(urlFragment) || string.IsNullOrEmpty(key))
                 return null;
-
+             
 
             try
             {

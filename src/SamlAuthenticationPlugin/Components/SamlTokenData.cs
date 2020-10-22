@@ -35,7 +35,11 @@ namespace Telligent.Services.SamlAuthenticationPlugin.Components
 
         public string ClientType
         {
-            get { return SamlOAuthClient.clientType; }
+            get{
+                var samlPlugin = PluginManager.GetSingleton<SamlOAuthClient>();
+
+                return samlPlugin.clientType;
+            }
         }
 
         public string ClientId { get; set; }
@@ -154,9 +158,9 @@ namespace Telligent.Services.SamlAuthenticationPlugin.Components
         public OAuthData GetOAuthData()
         {
             var oAuthData = new OAuthData();
-
+            var samlPlugin = PluginManager.GetSingleton<SamlOAuthClient>();
             oAuthData.ClientId = this.ClientId;  //note: by default this is the NameId from the saml token
-            oAuthData.ClientType = SamlOAuthClient.clientType;
+            oAuthData.ClientType = samlPlugin.clientType;
             oAuthData.CommonName = this.CommonName;
             oAuthData.Email = this.Email;
             oAuthData.UserName = this.UserName;

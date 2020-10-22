@@ -66,7 +66,7 @@ namespace Telligent.Services.SamlAuthenticationPlugin.Components
 
             if (!samlTokenData.IsExistingUser()) //only run if the ISamlUserLookup didnt already give us the UserId
             {
-                // Get the UserID
+                // Get the UserID 
                 int userID = 0;
 
 

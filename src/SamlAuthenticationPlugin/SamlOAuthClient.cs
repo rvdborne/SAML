@@ -13,14 +13,14 @@ using Telligent.Evolution.Extensibility.Version1;
 using Telligent.Services.SamlAuthenticationPlugin.Components;
 using Telligent.Services.SamlAuthenticationPlugin.Extensibility.Events;
 
-namespace Telligent.Services.SamlAuthenticationPlugin
+namespace Telligent.Services.SamlAuthenticationPlugin  
 {
 
     public class SamlOAuthClient : IScriptedContentFragmentFactoryDefaultProvider, IRequiredConfigurationPlugin, INavigable, ITokenProcessorConfiguration, IOAuthClient, IInstallablePlugin, ICategorizedPlugin, ISingletonPlugin
     {
 
         public static string PluginName = "SAML Authentication OAuth Client";  //allows for build automation
-        public const string clientType = "saml";  //oauth client type
+        //public string clientType = "saml";  //oauth client type
 
         #region Defaults
 
@@ -111,6 +111,7 @@ namespace Telligent.Services.SamlAuthenticationPlugin
         public void Update(IPluginConfiguration configuration)
         {
             Configuration = configuration;
+            //clientType = SamlCookieName;
             tokenProcessor = null; //reset the security token handler so we can regen it
         }
 
@@ -206,6 +207,8 @@ namespace Telligent.Services.SamlAuthenticationPlugin
                 iconUrl.Rules.Add(new PropertyRule(typeof(Telligent.Evolution.Controls.PropertyRules.TrimStringRule), false));
                 groups[3].Properties.Add(iconUrl);
 
+                groups[3].Properties.Add(new Property("samlCookieName", "SAML Cookie Name", PropertyType.String, 3, "saml"));
+
 
                 #endregion
 
@@ -219,11 +222,11 @@ namespace Telligent.Services.SamlAuthenticationPlugin
         private void Events_AfterUserCreate(UserAfterCreateEventArgs e)
         {
 
-            var afterCreatedCookie = CookieHelper.GetCookie(SamlOAuthClient.clientType);
+            var afterCreatedCookie = CookieHelper.GetCookie(SamlCookieName);
             if (afterCreatedCookie == null) return;
             
             var samlTokenData = SamlTokenData.GetTokenDataFromDatabase(afterCreatedCookie.Value);
-            if (samlTokenData == null) return;
+            if (samlTokenData == null) return; 
 
             //destroy secure cookie for new user if cookie is still present
             CookieHelper.DeleteCookie(afterCreatedCookie.Value);
@@ -334,6 +337,8 @@ namespace Telligent.Services.SamlAuthenticationPlugin
         public string LogoutUrl => LogoutUrlBehavior == LogoutUrlBehavior.EXTERNAL ? IdpLogoutUrl : string.Empty;
         public string IdpLogoutUrl => IdpAuthRequestType == AuthnBinding.WSFededation ? $"{IdpUrl}?wa=wsignout1.0" : Configuration.GetString("logoutUrl");
         public string AuthNCertThumbrint => Configuration.GetString("authThumbprint");
+        public string SamlCookieName => Configuration.GetString("samlCookieName");
+        public string clientType => string.IsNullOrEmpty(Configuration.GetString("samlCookieName")) ? "saml" : Configuration.GetString("samlCookieName");
 
 
         /// <summary>

@@ -14,6 +14,9 @@ namespace Telligent.Services.SamlAuthenticationPlugin.Extensions
             if (samlTokenData == null)
                 return null;
 
+            if (!string.IsNullOrWhiteSpace(samlTokenData.CommonName) && !Override)
+                return samlTokenData;
+
             var displayName = string.Empty;
             if (DisplayNameAttribute.Contains("}"))
             {
@@ -53,6 +56,11 @@ namespace Telligent.Services.SamlAuthenticationPlugin.Extensions
         public string DisplayNameAttribute
         {
             get { return Configuration.GetString("DisplayNameAttribute"); }
+        }
+
+        public bool Override
+        {
+            get { return Configuration.GetBool("Override"); }
         }
 
         public bool Enabled
@@ -119,6 +127,7 @@ namespace Telligent.Services.SamlAuthenticationPlugin.Extensions
                 var displayNameClaim = new Property("DisplayNameAttribute", "Display Name Attribute Name", PropertyType.String, 1, "displayname") { DescriptionText = "The name saml attribute containing the display name for a user. (Used for account auto-creation.  Will replace claims in {first} {last} syntax to parse a pattern)" }; ;
                 displayNameClaim.Rules.Add(new PropertyRule(typeof(Telligent.Evolution.Controls.PropertyRules.TrimStringRule), false));
                 groups[0].Properties.Add(displayNameClaim);
+                groups[0].Properties.Add(new Property("Override", "Override the existing display name", PropertyType.Bool, 2, "false") { DescriptionText = "Override the existing display name" });
 
                 return groups;
 

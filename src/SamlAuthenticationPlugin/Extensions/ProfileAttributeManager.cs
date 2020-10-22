@@ -142,7 +142,7 @@ namespace Telligent.Services.SamlAuthenticationPlugin.Extensions
                 {
                     _eventLogApi.Write("ProfileAttributeManager Error GetSamlTokenProfileData: " + ex.Message + " : " + ex.StackTrace, new EventLogEntryWriteOptions() { Category = "SAML", EventId = 1, EventType = "Error" });
                 }
-
+                 
             }
 
             return extractedProfileData;
