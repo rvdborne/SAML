@@ -14,7 +14,7 @@ namespace Telligent.Services.SamlAuthenticationPlugin
     public class SqlData
     {
         static readonly string databaseOwner = "dbo";
-        private static IEventLog _apiEventLog;
+        //private static readonly IEventLog ApiEventLog = Apis.Get<IEventLog>();
 
 
         #region Helper methods & properties
@@ -36,7 +36,7 @@ namespace Telligent.Services.SamlAuthenticationPlugin
 
         private SqlData()
         {
-            _apiEventLog = Apis.Get<IEventLog>();
+            
         }
 
         public static void SaveEncryptedSamlToken(Guid tokenKey, string encryptedData)
@@ -63,7 +63,7 @@ namespace Telligent.Services.SamlAuthenticationPlugin
             }
             catch (Exception ex)
             {
-                _apiEventLog.Write("Error inserting token into the db_SamlTempTokenData table. " + ex, new EventLogEntryWriteOptions() { Category = "SAML", EventId = 6023, EventType = "Error" });
+                Apis.Get<IEventLog>().Write("Error inserting token into the db_SamlTempTokenData table. " + ex, new EventLogEntryWriteOptions() { Category = "SAML", EventId = 6023, EventType = "Error" });
             }
         }
 
@@ -86,7 +86,7 @@ namespace Telligent.Services.SamlAuthenticationPlugin
             }
             catch (Exception ex)
             {
-                _apiEventLog.Write("Error reading from db_SamlTempTokenData; I dont think its installed. " + ex, new EventLogEntryWriteOptions() { Category = "SAML", EventId = 6022, EventType = "Error" });
+                Apis.Get<IEventLog>().Write("Error reading from db_SamlTempTokenData; I dont think its installed. " + ex, new EventLogEntryWriteOptions() { Category = "SAML", EventId = 6022, EventType = "Error" });
                 return string.Empty;
             }
         }
@@ -109,7 +109,7 @@ namespace Telligent.Services.SamlAuthenticationPlugin
             }
             catch (Exception ex)
             {
-                _apiEventLog.Write("Error deleting from db_SamlTokenData; I dont think its installed. " + ex, new EventLogEntryWriteOptions() { Category = "SAML", EventId = 6024, EventType = "Error" });
+                Apis.Get<IEventLog>().Write("Error deleting from db_SamlTokenData; I dont think its installed. " + ex, new EventLogEntryWriteOptions() { Category = "SAML", EventId = 6024, EventType = "Error" });
             }
         }
 
@@ -151,7 +151,7 @@ namespace Telligent.Services.SamlAuthenticationPlugin
             }
             catch (Exception ex)
             {
-                _apiEventLog.Write("Error reading from db_SamlTokenStore; I dont think its installed. " + ex, new EventLogEntryWriteOptions { Category= "SAML",  EventId =  6011, EventType="Error"});
+                Apis.Get<IEventLog>().Write("Error reading from db_SamlTokenStore; I dont think its installed. " + ex, new EventLogEntryWriteOptions { Category= "SAML",  EventId =  6011, EventType="Error"});
             }
 
             return null;
@@ -203,7 +203,7 @@ namespace Telligent.Services.SamlAuthenticationPlugin
             }
             catch (Exception ex)
             {
-                _apiEventLog.Write("Error inserting token into the db_SamlTokenStore. " + ex, new EventLogEntryWriteOptions { Category = "SAML", EventId = 6009, EventType = "Error" });
+                Apis.Get<IEventLog>().Write("Error inserting token into the db_SamlTokenStore. " + ex, new EventLogEntryWriteOptions { Category = "SAML", EventId = 6009, EventType = "Error" });
             }
         }
 
@@ -249,7 +249,7 @@ namespace Telligent.Services.SamlAuthenticationPlugin
             }
             catch (Exception ex)
             {
-                _apiEventLog.Write("Error updating from db_SamlTokenStore. " + ex, new EventLogEntryWriteOptions { Category = "SAML", EventId = 6010, EventType = "Error" });
+                Apis.Get<IEventLog>().Write("Error updating from db_SamlTokenStore. " + ex, new EventLogEntryWriteOptions { Category = "SAML", EventId = 6010, EventType = "Error" });
             }
         }
 
@@ -299,7 +299,7 @@ namespace Telligent.Services.SamlAuthenticationPlugin
             }
             catch (Exception ex)
             {
-                _apiEventLog.Write("Error reading from db_SamlTokenStore. " + ex, new EventLogEntryWriteOptions { Category= "SAML", EventId = 6012, EventType="Error"});
+                Apis.Get<IEventLog>().Write("Error reading from db_SamlTokenStore. " + ex, new EventLogEntryWriteOptions { Category= "SAML", EventId = 6012, EventType="Error"});
             }
 
             return null;
