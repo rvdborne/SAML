@@ -1,7 +1,7 @@
-﻿using Telligent.Services.SamlAuthenticationPlugin.Components;
+﻿using Verint.Services.SamlAuthenticationPlugin.Components;
 using PublicEntity = Telligent.Evolution.Extensibility.Api.Entities.Version1.User;
 
-namespace Telligent.Services.SamlAuthenticationPlugin.Extensibility.Events
+namespace Verint.Services.SamlAuthenticationPlugin.Extensibility.Events
 {
     public class SamlAfterAuthenticateEventArgs
     {

@@ -5,7 +5,7 @@ using System.Web.UI;
 // General Information about an assembly is controlled through the following 
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("Telligent.Services.SamlAuthentication")]
+[assembly: AssemblyTitle("Verint.Services.SamlAuthentication")]
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("Verint Systems Inc.")]
@@ -22,5 +22,5 @@ using System.Web.UI;
 [assembly: Guid("76db9d88-9ae9-4e35-8f56-bf48c972a4aa")]
 
 //embeded resources
-[assembly: WebResource("Telligent.Services.SamlAuthenticationPlugin.Resources.Images.saml.png", "image/png")]
-[assembly: WebResource("Telligent.Services.SamlAuthenticationPlugin.Resources.Images.oauth.gif", "image/gif")]
+[assembly: WebResource("Verint.Services.SamlAuthenticationPlugin.Resources.Images.saml.png", "image/png")]
+[assembly: WebResource("Verint.Services.SamlAuthenticationPlugin.Resources.Images.oauth.gif", "image/gif")]

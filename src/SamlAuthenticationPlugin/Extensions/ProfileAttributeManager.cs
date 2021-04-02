@@ -2,57 +2,33 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
-using Telligent.DynamicConfiguration.Components;
 using Telligent.Evolution.Extensibility;
 using Telligent.Evolution.Extensibility.Api.Entities.Version1;
 using Telligent.Evolution.Extensibility.Api.Version1;
-using Telligent.Evolution.Extensibility.Version1;
-using Telligent.Services.SamlAuthenticationPlugin.Components;
-using Telligent.Services.SamlAuthenticationPlugin.Extensibility.Events;
+using Telligent.Evolution.Extensibility.Version2;
+using Verint.Services.SamlAuthenticationPlugin.Components;
+using Verint.Services.SamlAuthenticationPlugin.Extensibility.Events;
+using Property = Telligent.Evolution.Extensibility.Configuration.Version1.Property;
+using PropertyGroup = Telligent.Evolution.Extensibility.Configuration.Version1.PropertyGroup;
+using PropertyRule = Telligent.Evolution.Extensibility.Configuration.Version1.PropertyRule;
 
-namespace Telligent.Services.SamlAuthenticationPlugin.Extensions
+namespace Verint.Services.SamlAuthenticationPlugin.Extensions
 {
     public class ProfileAttributeManager : IRequiredConfigurationPlugin
     {
-
-        public static string PluginName = "SAML Profile Attribute Manager";
-        private IUsers _usersApi;
-        private IUserProfileFields _userProfileFields;
-        private IEventLog _eventLogApi;
-
-
-        public ProfileAttributeManager()
-        {
-
-        }
-
         #region IPlugin
 
-        public string Description
-        {
-            get { return "Sets Telligent user profile fields based on SAML calims / attributres, optionally can also update those claims on login"; }
-        }
+        public string Description => "Sets Telligent user profile fields based on SAML calims / attributres, optionally can also update those claims on login";
 
-        public string Name
-        {
-            get { return PluginName; }
-        }
+        public string Name => "SAML Profile Attribute Manager";
 
-
-        public bool Enabled
-        {
-            get { return this.IsConfigured; }
-        }
+        public bool Enabled => IsConfigured;
 
         public void Initialize()
         {
-            _userProfileFields = Apis.Get<IUserProfileFields>();
-            _usersApi = Apis.Get<IUsers>();
-            _eventLogApi = Apis.Get<IEventLog>();
-
             SamlEvents.Instance.AfterAuthenticate += Instance_AfterAuthenticate;
             SamlEvents.Instance.AfterCreate += Instance_AfterCreate;
-            _usersApi.Events.BeforeUpdate += Events_BeforeUpdate;
+            Apis.Get<IUsers>().Events.BeforeUpdate += Events_BeforeUpdate;
         }
 
         private void Events_BeforeUpdate(UserBeforeUpdateEventArgs e)
@@ -103,8 +79,8 @@ namespace Telligent.Services.SamlAuthenticationPlugin.Extensions
 
         private void ManageUserProfileFields(User user, SamlTokenData samlTokenData)
         {
-
-            _usersApi.RunAsUser("admin", () =>
+            var apiUser = Apis.Get<IUsers>();
+            apiUser.RunAsUser(apiUser.ServiceUserName, () =>
             {
                 var usersSamlTokenProfileData = GetSamlTokenProfileData(samlTokenData);
 
@@ -140,7 +116,8 @@ namespace Telligent.Services.SamlAuthenticationPlugin.Extensions
                 }
                 catch (Exception ex)
                 {
-                    _eventLogApi.Write("ProfileAttributeManager Error GetSamlTokenProfileData: " + ex.Message + " : " + ex.StackTrace, new EventLogEntryWriteOptions() { Category = "SAML", EventId = 1, EventType = "Error" });
+                    Apis.Get<IExceptions>().Log(ex);
+                    Apis.Get<IEventLog>().Write("ProfileAttributeManager Error GetSamlTokenProfileData: " + ex.Message + " : " + ex.StackTrace, new EventLogEntryWriteOptions() { Category = "SAML", EventId = 1, EventType = "Error" });
                 }
                  
             }
@@ -150,19 +127,21 @@ namespace Telligent.Services.SamlAuthenticationPlugin.Extensions
         
         private void CreateMissingProfileFields(IEnumerable<string> profileFieldNames)
         {
-            var profileFieldTypePlainText = _userProfileFields.ProfileFieldTypes.Where(i => i.Name == "Plain Text").FirstOrDefault();  //type 4
+            var apiUserProfileFields = Apis.Get<IUserProfileFields>();
+            var profileFieldTypePlainText = apiUserProfileFields.ProfileFieldTypes.Where(i => i.Name == "Plain Text").FirstOrDefault();  //type 4
             foreach (string profileFieldName in profileFieldNames)
             {
                 try
                 {
-                    if (_userProfileFields.Get(profileFieldName) == null)
+                    if (apiUserProfileFields.Get(profileFieldName) == null)
                     {
-                        _userProfileFields.Create(profileFieldName, profileFieldTypePlainText.Id, new UserProfileFieldsCreateOptions() { IsSearchable = false });
+                        apiUserProfileFields.Create(profileFieldName, profileFieldTypePlainText.Id, new UserProfileFieldsCreateOptions() { IsSearchable = false });
                     }
                 }
                 catch (Exception ex)
                 {
-                    _eventLogApi.Write("ProfileAttributeManager Error CreateMissingProfileFields: " + ex.Message + " : " + ex.StackTrace, new EventLogEntryWriteOptions() { Category = "SAML", EventId = 1, EventType = "Error" });
+                    Apis.Get<IExceptions>().Log(ex);
+                    Apis.Get<IEventLog>().Write("ProfileAttributeManager Error CreateMissingProfileFields: " + ex.Message + " : " + ex.StackTrace, new EventLogEntryWriteOptions() { Category = "SAML", EventId = 1, EventType = "Error" });
                 }
 
             }
@@ -174,12 +153,12 @@ namespace Telligent.Services.SamlAuthenticationPlugin.Extensions
             var samlProfileFields = GetSamlProfileFields();
             var updatedProfileFields = new ApiList<ProfileField>();
 
-            bool hasChanges = false;
+            var hasChanges = false;
             foreach (var userProfileField in samlProfileFields)
             {
                 try
                 {
-                    bool userHasField = false;
+                    var userHasField = false;
                     //this checks the current users profile fields against saml (ie remove or update)
                     foreach (var profileField in currentProfileFields.Where(i => i.Label == userProfileField.Name))
                     {
@@ -208,26 +187,17 @@ namespace Telligent.Services.SamlAuthenticationPlugin.Extensions
                 }
                 catch (Exception ex)
                 {
-                    _eventLogApi.Write("ProfileAttributeManager Error UpdatedProfileFields: " + ex.Message + " : " + ex.StackTrace, new EventLogEntryWriteOptions() { Category = "SAML", EventId = 1, EventType = "Error" });
+                    Apis.Get<IExceptions>().Log(ex);
+                    Apis.Get<IEventLog>().Write("ProfileAttributeManager Error UpdatedProfileFields: " + ex.Message + " : " + ex.StackTrace, new EventLogEntryWriteOptions() { Category = "SAML", EventId = 1, EventType = "Error" });
                 }
 
             }
 
-            if (hasChanges)
-            {
-                return updatedProfileFields;
-            }
-            else
-            {
-                return null;
-            }
+            return hasChanges ? updatedProfileFields : null;
         }
         
-        public string[] Categories
-        {
-            get { return SamlHelpers.ExtensionPluginCategories; }
-        }
-        
+        public string[] Categories => SamlHelpers.ExtensionPluginCategories;
+
         #endregion
 
         private void UpdateProfileFields(int userId, IList<ProfileField> profileFields)
@@ -235,18 +205,19 @@ namespace Telligent.Services.SamlAuthenticationPlugin.Extensions
             try
             {
                 //for this to work the profilefield.title needs to be the internal name not the label
-                _usersApi.Update(new UsersUpdateOptions { ProfileFields = profileFields, Id = userId });
+                Apis.Get<IUsers>().Update(new UsersUpdateOptions { ProfileFields = profileFields, Id = userId });
             }
             catch (Exception ex)
             {
-                _eventLogApi.Write("ProfileAttributeManager Error UpdateProfileFields: " + ex.Message + " : " + ex.StackTrace, new EventLogEntryWriteOptions() { Category = "SAML", EventId = 1, EventType = "Error" });
+                Apis.Get<IExceptions>().Log(ex);
+                Apis.Get<IEventLog>().Write("ProfileAttributeManager Error UpdateProfileFields: " + ex.Message + " : " + ex.StackTrace, new EventLogEntryWriteOptions() { Category = "SAML", EventId = 1, EventType = "Error" });
             }
 
         }
 
         private ApiList<UserProfileField> GetSamlProfileFields()
         {
-            var samlProfileFields = new ApiList<Evolution.Extensibility.Api.Entities.Version1.UserProfileField>();
+            var samlProfileFields = new ApiList<UserProfileField>();
             var allProfileFields = Apis.Get<IUserProfileFields>().List(new UserProfileFieldsListOptions() { PageSize = int.MaxValue });
             foreach (var profileField in allProfileFields)
             {
@@ -260,20 +231,11 @@ namespace Telligent.Services.SamlAuthenticationPlugin.Extensions
 
         #region Configuration
 
-        public string ProfileFieldPrefix
-        {
-            get { return Configuration.GetString("ProfileFieldPrefix"); }
-        }
+        public string ProfileFieldPrefix => Configuration.GetString("ProfileFieldPrefix");
 
-        public bool AutoUpdate
-        {
-            get { return Configuration.GetBool("autoUpdate"); }
-        }
+        public bool AutoUpdate => Configuration.GetBool("autoUpdate").Value;
 
-        public bool MakeReadonly
-        {
-            get { return Configuration.GetBool("makeReadonly"); }
-        }
+        public bool MakeReadonly => Configuration.GetBool("makeReadonly").Value;
 
         public bool IsConfigured
         {
@@ -298,25 +260,55 @@ namespace Telligent.Services.SamlAuthenticationPlugin.Extensions
             Configuration = configuration;
         }
 
-        public DynamicConfiguration.Components.PropertyGroup[] ConfigurationOptions
+        public PropertyGroup[] ConfigurationOptions
         {
             get
             {
-                PropertyGroup[] groups = new[] { new PropertyGroup("options", "Options", 0) };
+                var groups = new[]
+                {
+                    new PropertyGroup
+                    {
+                        Id = "Options",
+                        LabelText = "Options",
+                        OrderNumber = 0
+                    }
+                };
 
-
-                var profileFieldPrefix = new Property("ProfileFieldPrefix", "Profile Field Prefix", PropertyType.String, 1, "SAML_") { DescriptionText = "A prefix used to identify profile fields that should be updated by SAML claims (profile fields that start with this prefix that are not in the SAML claims will be emptied) (SAML will auto create these profile fields)" }; ;
-                profileFieldPrefix.Rules.Add(new PropertyRule(typeof(Telligent.Evolution.Controls.PropertyRules.TrimStringRule), false));
+                var profileFieldPrefix = new Property
+                {
+                    Id = "ProfileFieldPrefix",
+                    LabelText = "Profile Field Prefix",
+                    DataType = "String",
+                    OrderNumber = 1,
+                    DefaultValue = "SAML_",
+                    DescriptionText = "A prefix used to identify profile fields that should be updated by SAML claims (profile fields that start with this prefix that are not in the SAML claims will be emptied) (SAML will auto create these profile fields)"
+                };
+                profileFieldPrefix.Rules.Add(new PropertyRule{Name = "trim"});
                 groups[0].Properties.Add(profileFieldPrefix);
 
-                var autoUpdate = new Property("autoUpdate", "Update Profile Fields On Login", PropertyType.Bool, 1, "true") { DescriptionText = "Update profile fields on every login with data from the saml token." };
+                var autoUpdate = new Property
+                {
+                    Id = "autoUpdate",
+                    LabelText = "Update Profile Fields On Login",
+                    DataType = "Bool",
+                    OrderNumber = 2,
+                    DefaultValue = "true",
+                    DescriptionText = "Update profile fields on every login with data from the saml token."
+                };
                 groups[0].Properties.Add(autoUpdate);
 
-                var makeReadonly = new Property("makeReadonly", "Make Readonly", PropertyType.Bool, 1, "true") { DescriptionText = "Ensures profile fields match the current SAML token every time the user is saved." };
+                var makeReadonly = new Property
+                {
+                    Id = "makeReadonly",
+                    LabelText = "Make Readonly",
+                    DataType = "Bool",
+                    OrderNumber = 3,
+                    DescriptionText = "Ensures profile fields match the current SAML token every time the user is saved.",
+                    DefaultValue = "true"
+                };
                 groups[0].Properties.Add(makeReadonly);
 
                 return groups;
-
             }
         }
 

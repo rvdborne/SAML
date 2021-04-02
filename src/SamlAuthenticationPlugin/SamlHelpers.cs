@@ -9,12 +9,12 @@ using System.Web.UI;
 using System.Xml;
 using System.Xml.Serialization;
 using Telligent.Evolution.Extensibility.Api.Version1;
-using Telligent.Services.SamlAuthenticationPlugin.Components;
+using Verint.Services.SamlAuthenticationPlugin.Components;
 using System.IO;
 using System.Globalization;
 using Telligent.Evolution.Extensibility;
 
-namespace Telligent.Services.SamlAuthenticationPlugin
+namespace Verint.Services.SamlAuthenticationPlugin
 {
     public static class SamlHelpers
     {

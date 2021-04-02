@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Security.Claims;
 
-namespace Telligent.Services.SamlAuthenticationPlugin.Components
+namespace Verint.Services.SamlAuthenticationPlugin.Components
 {
     [Serializable]
     public class SamlAttribute

@@ -2,7 +2,7 @@
 using System.IdentityModel.Tokens;
 using System.Web;
 
-namespace Telligent.Services.SamlAuthenticationPlugin.Components
+namespace Verint.Services.SamlAuthenticationPlugin.Components
 {
     public class SubjectConfirmationDataSaml2SecurityTokenHandler : Saml2SecurityTokenHandler
     {

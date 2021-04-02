@@ -9,9 +9,9 @@ using System.Xml;
 using Telligent.Evolution.Extensibility;
 using Telligent.Evolution.Extensibility.Api.Version1;
 using Telligent.Evolution.Extensibility.Version1;
-using Telligent.Services.SamlAuthenticationPlugin.Extensibility;
+using Verint.Services.SamlAuthenticationPlugin.Extensibility;
 
-namespace Telligent.Services.SamlAuthenticationPlugin.Components
+namespace Verint.Services.SamlAuthenticationPlugin.Components
 {
     public class TokenProcessor
     {

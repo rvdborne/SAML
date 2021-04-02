@@ -4,9 +4,9 @@ using System.Web;
 using Telligent.Evolution.Extensibility;
 using Telligent.Evolution.Extensibility.Api.Version1;
 using Telligent.Evolution.Extensibility.Version1;
-using Telligent.Services.SamlAuthenticationPlugin.Extensibility;
+using Verint.Services.SamlAuthenticationPlugin.Extensibility;
 
-namespace Telligent.Services.SamlAuthenticationPlugin.Components
+namespace Verint.Services.SamlAuthenticationPlugin.Components
 {
     public class SamlResponseHandler : IHttpHandler
     {
@@ -110,7 +110,7 @@ namespace Telligent.Services.SamlAuthenticationPlugin.Components
                 context.Response.Clear();
                 context.Response.Buffer = true;
                 // Read the original file from disk
-                Stream myFileStream = EmbeddedResources.GetStream("Telligent.Services.SamlAuthenticationPlugin.Resources.Images.oauth.gif");
+                Stream myFileStream = EmbeddedResources.GetStream("Verint.Services.SamlAuthenticationPlugin.Resources.Images.oauth.gif");
                 long FileSize = myFileStream.Length;
                 byte[] Buffer = new byte[(int)FileSize];
                 myFileStream.Read(Buffer, 0, (int)FileSize);

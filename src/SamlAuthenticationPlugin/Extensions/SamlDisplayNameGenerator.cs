@@ -1,9 +1,11 @@
-﻿using Telligent.DynamicConfiguration.Components;
-using Telligent.Evolution.Extensibility.Version1;
-using Telligent.Services.SamlAuthenticationPlugin.Components;
-using Telligent.Services.SamlAuthenticationPlugin.Extensibility;
+﻿using Telligent.Evolution.Extensibility.Configuration.Version1;
+using Verint.Services.SamlAuthenticationPlugin.Components;
+using Verint.Services.SamlAuthenticationPlugin.Extensibility;
 
-namespace Telligent.Services.SamlAuthenticationPlugin.Extensions
+using IPluginConfiguration = Telligent.Evolution.Extensibility.Version2.IPluginConfiguration;
+using IRequiredConfigurationPlugin = Telligent.Evolution.Extensibility.Version2.IRequiredConfigurationPlugin;
+
+namespace Verint.Services.SamlAuthenticationPlugin.Extensions
 {
     public class SamlDisplayNameGenerator : ISamlDisplayNameGenerator, IRequiredConfigurationPlugin
     {
@@ -53,20 +55,11 @@ namespace Telligent.Services.SamlAuthenticationPlugin.Extensions
             return samlTokenData;
         }
 
-        public string DisplayNameAttribute
-        {
-            get { return Configuration.GetString("DisplayNameAttribute"); }
-        }
+        public string DisplayNameAttribute => Configuration.GetString("DisplayNameAttribute");
 
-        public bool Override
-        {
-            get { return Configuration.GetBool("Override"); }
-        }
+        public bool Override => Configuration.GetBool("Override").Value;
 
-        public bool Enabled
-        {
-            get { return this.IsConfigured; }
-        }
+        public bool Enabled => this.IsConfigured;
 
         #region IPlugin
 
@@ -94,16 +87,7 @@ namespace Telligent.Services.SamlAuthenticationPlugin.Extensions
 
         #region Configuration
 
-        public bool IsConfigured
-        {
-            get
-            {
-                if (string.IsNullOrEmpty(DisplayNameAttribute))
-                    return false;
-
-                return true;
-            }
-        }
+        public bool IsConfigured => !string.IsNullOrEmpty(DisplayNameAttribute);
 
         protected IPluginConfiguration Configuration
         {
@@ -117,20 +101,35 @@ namespace Telligent.Services.SamlAuthenticationPlugin.Extensions
             Configuration = configuration;
         }
 
-        public DynamicConfiguration.Components.PropertyGroup[] ConfigurationOptions
+        public PropertyGroup[] ConfigurationOptions
         {
             get
             {
-                PropertyGroup[] groups = new[] { new PropertyGroup("options", "Options", 0) };
+                var groups = new[] { new PropertyGroup{Id = "options", LabelText = "Options", OrderNumber = 0} };
 
-
-                var displayNameClaim = new Property("DisplayNameAttribute", "Display Name Attribute Name", PropertyType.String, 1, "displayname") { DescriptionText = "The name saml attribute containing the display name for a user. (Used for account auto-creation.  Will replace claims in {first} {last} syntax to parse a pattern)" }; ;
-                displayNameClaim.Rules.Add(new PropertyRule(typeof(Telligent.Evolution.Controls.PropertyRules.TrimStringRule), false));
+                var displayNameClaim = new Property
+                {
+                    Id = "DisplayNameAttribute",
+                    LabelText = "Display Name Attribute Name",
+                    DataType = "String",
+                    DefaultValue = "displayname",
+                    DescriptionText = "The name saml attribute containing the display name for a user. (Used for account auto-creation.  Will replace claims in {first} {last} syntax to parse a pattern)"
+                };
+                displayNameClaim.Rules.Add(new PropertyRule{Name = "trim"});
                 groups[0].Properties.Add(displayNameClaim);
-                groups[0].Properties.Add(new Property("Override", "Override the existing display name", PropertyType.Bool, 2, "false") { DescriptionText = "Override the existing display name" });
+
+                var overrideDisplayName = new Property
+                {
+                    Id = "Override",
+                    LabelText = "Override the existing display name",
+                    DataType = "Bool",
+                    OrderNumber = 2,
+                    DefaultValue = "false",
+                    DescriptionText = "Override the existing display name"
+                };
+                groups[0].Properties.Add(overrideDisplayName);
 
                 return groups;
-
             }
         }
 

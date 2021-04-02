@@ -1,7 +1,7 @@
 ﻿using Telligent.Evolution.Extensibility.Version1;
-using Telligent.Services.SamlAuthenticationPlugin.Components;
+using Verint.Services.SamlAuthenticationPlugin.Components;
 
-namespace Telligent.Services.SamlAuthenticationPlugin.Extensibility
+namespace Verint.Services.SamlAuthenticationPlugin.Extensibility
 {
     public interface ISamlUserLookup : ISingletonPlugin, ICategorizedPlugin
     {

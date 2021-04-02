@@ -1,6 +1,6 @@
 ﻿using Telligent.Evolution.Extensibility.Version1;
 
-namespace Telligent.Services.SamlAuthenticationPlugin.Extensibility
+namespace Verint.Services.SamlAuthenticationPlugin.Extensibility
 {
     public interface IPlatformLogout : ISingletonPlugin, ICategorizedPlugin
     {

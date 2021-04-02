@@ -4,7 +4,7 @@ using System.Globalization;
 using System.IdentityModel.Tokens;
 using System.Linq;
 
-namespace Telligent.Services.SamlAuthenticationPlugin.Components
+namespace Verint.Services.SamlAuthenticationPlugin.Components
 {
     /// <summary>
     /// A replacement for the stock ConfigurationBasedIssuerNameRegistery with "slightly" better error messages and a simplified constructor.

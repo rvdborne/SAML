@@ -1,4 +1,4 @@
-﻿namespace Telligent.Services.SamlAuthenticationPlugin.Components
+﻿namespace Verint.Services.SamlAuthenticationPlugin.Components
 {
     public enum AuthnBinding
     {

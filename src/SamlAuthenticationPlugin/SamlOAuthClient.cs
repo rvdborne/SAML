@@ -3,25 +3,23 @@ using System.Collections.Generic;
 using System.ServiceModel.Security;
 using System.Web;
 using System.Xml;
-using Telligent.DynamicConfiguration.Components;
 using Telligent.Evolution.Extensibility;
 using Telligent.Evolution.Extensibility.Api.Version1;
 using Telligent.Evolution.Extensibility.Authentication.Version1;
+using Telligent.Evolution.Extensibility.Configuration.Version1;
 using Telligent.Evolution.Extensibility.UI.Version1;
-using Telligent.Evolution.Extensibility.Urls.Version1;
 using Telligent.Evolution.Extensibility.Version1;
-using Telligent.Services.SamlAuthenticationPlugin.Components;
-using Telligent.Services.SamlAuthenticationPlugin.Extensibility.Events;
+using Telligent.Evolution.Extensibility.Urls.Version1;
+using Verint.Services.SamlAuthenticationPlugin.Components;
+using Verint.Services.SamlAuthenticationPlugin.Extensibility.Events;
+using IPluginConfiguration = Telligent.Evolution.Extensibility.Version2.IPluginConfiguration;
+using IRequiredConfigurationPlugin = Telligent.Evolution.Extensibility.Version2.IRequiredConfigurationPlugin;
 
-namespace Telligent.Services.SamlAuthenticationPlugin  
+namespace Verint.Services.SamlAuthenticationPlugin  
 {
 
     public class SamlOAuthClient : IScriptedContentFragmentFactoryDefaultProvider, IRequiredConfigurationPlugin, INavigable, ITokenProcessorConfiguration, IOAuthClient, IInstallablePlugin, ICategorizedPlugin, ISingletonPlugin
     {
-
-        public static string PluginName = "SAML Authentication OAuth Client";  //allows for build automation
-        //public string clientType = "saml";  //oauth client type
-
         #region Defaults
 
         public static List<string> PluginCategories = new List<string> { "SAML", "OAuth" }; //leverage this for extensions to make them easier to find
@@ -42,41 +40,27 @@ namespace Telligent.Services.SamlAuthenticationPlugin
         private const bool _allowTokenMatchingByEmailAddressDefault = true;
         private const bool _allowAutoUserRegistrationDefault = true;
         internal const string oauthTokeyQuerystringKey = "saml_data_token_key";
-        private IEventLog _eventLogApi;
-        private IUsers _usersApi;
-        private IUrl _urlApi;
-        private ICoreUrls _coreUrlsApi;
 
         #endregion
 
         #region IPlugin
 
-        public string Name
-        {
-            get { return PluginName; }
-        }
+        public string Name => "SAML Authentication OAuth Client";
 
-        public string Description
+        public string Description => "Allows single-sign-on by converting SAML Tokens into OAuth tokens.";
 
-        {
-            get { return "Allows single-sign-on by converting SAML Tokens into OAuth tokens."; }
-        }
-        
         public void Initialize()
         {
-            _eventLogApi = Apis.Get<IEventLog>();
-            _usersApi = Apis.Get<IUsers>();
-            _urlApi = Apis.Get<IUrl>();
-            _coreUrlsApi = Apis.Get<ICoreUrls>();
+            var usersApi = Apis.Get<IUsers>();
 
             //hook the user created event to save SAML token data (from secure cookie if persist flag is set) for new users
-            _usersApi.Events.AfterCreate += new UserAfterCreateEventHandler(Events_AfterUserCreate);
+            usersApi.Events.AfterCreate += Events_AfterUserCreate;
 
             //hook to create custom user authenticated event
-            _usersApi.Events.AfterIdentify += new UserAfterIdentifyEventHandler(Events_AfterIdentify);
+            usersApi.Events.AfterIdentify += Events_AfterIdentify;
 
             //cleanup persistant storage when a user is deleted
-            _usersApi.Events.AfterDelete += new UserAfterDeleteEventHandler(Events_AfterUserDelete);
+            usersApi.Events.AfterDelete += Events_AfterUserDelete;
 
         }
 
@@ -106,8 +90,7 @@ namespace Telligent.Services.SamlAuthenticationPlugin
             get;
             private set;
         }
-
-
+        
         public void Update(IPluginConfiguration configuration)
         {
             Configuration = configuration;
@@ -119,60 +102,210 @@ namespace Telligent.Services.SamlAuthenticationPlugin
         {
             get
             {
-                var groups = new[] { new PropertyGroup("issuer", "Issuer", 0), new PropertyGroup("auth", "AuthN", 1), new PropertyGroup("logout", "Logout", 2), new PropertyGroup("options", "Options", 3) };
+                var groups = new[]
+                {
+                    new PropertyGroup{Id = "issuer", LabelText = "Issuer", OrderNumber = 0},
+                    new PropertyGroup{Id = "auth", LabelText = "AuthN", OrderNumber = 1},
+                    new PropertyGroup{Id = "logout", LabelText = "Logout", OrderNumber = 2},
+                    new PropertyGroup{Id = "options", LabelText = "Options", OrderNumber = 3}
+                };
 
                 #region Issuer
 
-                var idpUrl = new Property("idpUrl", "The SAML Identity Provider URL", PropertyType.String, 10, _idpUrlDefault);
-                idpUrl.Rules.Add(new PropertyRule(typeof(Telligent.Evolution.Controls.PropertyRules.TrimStringRule), false));
+                var idpUrl = new Property { Id = "idpUrl", LabelText = "The SAML Identity Provider URL", DataType = "String", OrderNumber = 10, DefaultValue = _idpUrlDefault};
+                idpUrl.Rules.Add(new PropertyRule{Name = "trim"});
                 groups[0].Properties.Add(idpUrl);
 
-                var IdpBindingType = new Property("idpBindingType", "The SAML Binding Type Used by the Identity Provider", PropertyType.String, 20, _idpBindingTypeDefault.ToString());
-                IdpBindingType.SelectableValues.Add(new PropertyValue(SamlBinding.SAML11_POST.ToString(), SamlBinding.SAML11_POST.ToString(), 1));
-                IdpBindingType.SelectableValues.Add(new PropertyValue(SamlBinding.SAML20_POST.ToString(), SamlBinding.SAML20_POST.ToString(), 2));
-                groups[0].Properties.Add(IdpBindingType);
+                var idpBindingType = new Property
+                {
+                    Id = "idpBindingType", 
+                    LabelText = "The SAML Binding Type Used by the Identity Provider", 
+                    DataType = "String", 
+                    OrderNumber = 20, 
+                    DefaultValue = _idpBindingTypeDefault.ToString()
+                };
+                idpBindingType.SelectableValues.Add(new PropertyValue
+                {
+                    LabelText = SamlBinding.SAML11_POST.ToString(), 
+                    Value = SamlBinding.SAML11_POST.ToString(), 
+                    OrderNumber = 1
+                });
+                idpBindingType.SelectableValues.Add(new PropertyValue
+                {
+                    LabelText = SamlBinding.SAML20_POST.ToString(), 
+                    Value = SamlBinding.SAML20_POST.ToString(), 
+                    OrderNumber = 2
+                });
+                groups[0].Properties.Add(idpBindingType);
 
-                var issuerThumbprint = new Property("issuerThumbprint", "Issuer Certificate Thumbprints", PropertyType.String, 30, _issuerThumbprintDefault) { DescriptionText = "A comma seperated list of thumbprints used by the trusted issuer(s) (used to validate the SAML token)" };
-                issuerThumbprint.Rules.Add(new PropertyRule(typeof(Telligent.Services.SamlAuthenticationPlugin.Components.CleanThumbprintRule), false));
+                var issuerThumbprint = new Property
+                {
+                    Id = "issuerThumbprint", 
+                    LabelText = "Issuer Certificate Thumbprints", 
+                    DataType = "String", 
+                    OrderNumber = 30, 
+                    DefaultValue = _issuerThumbprintDefault,
+                    DescriptionText = "A comma seperated list of thumbprints used by the trusted issuer(s) (used to validate the SAML token)"
+                };
+                issuerThumbprint.Rules.Add(new PropertyRule{Name = "cleanthumbprint" });
                 groups[0].Properties.Add(issuerThumbprint);
 
-                var issuerCertificateValidationMode = new Property("issuerCertificateValidationMode", "Issuer Certificate Validation Mode", PropertyType.String, 40, _issuerCertificateValidationModeDefault.ToString()) { DescriptionText = "Validation of the SAML signing certificate issuer" };
-                issuerCertificateValidationMode.SelectableValues.Add(new PropertyValue(X509CertificateValidationMode.ChainTrust.ToString(), X509CertificateValidationMode.ChainTrust.ToString(), 1));
-                issuerCertificateValidationMode.SelectableValues.Add(new PropertyValue(X509CertificateValidationMode.PeerOrChainTrust.ToString(), X509CertificateValidationMode.PeerOrChainTrust.ToString(), 2));
-                issuerCertificateValidationMode.SelectableValues.Add(new PropertyValue(X509CertificateValidationMode.PeerTrust.ToString(), X509CertificateValidationMode.PeerTrust.ToString(), 3));
-                issuerCertificateValidationMode.SelectableValues.Add(new PropertyValue(X509CertificateValidationMode.None.ToString(), X509CertificateValidationMode.None.ToString(), 4));
+                var issuerCertificateValidationMode = new Property
+                {
+                    Id = "issuerCertificateValidationMode", 
+                    LabelText = "Issuer Certificate Validation Mode", 
+                    DataType = "String", 
+                    OrderNumber = 40, 
+                    DefaultValue = _issuerCertificateValidationModeDefault.ToString(),
+                    DescriptionText = "Validation of the SAML signing certificate issuer"
+                }; 
+                issuerCertificateValidationMode.SelectableValues.Add(new PropertyValue
+                {
+                    LabelText = X509CertificateValidationMode.ChainTrust.ToString(), 
+                    Value = X509CertificateValidationMode.ChainTrust.ToString(), 
+                    OrderNumber = 1
+                });
+                issuerCertificateValidationMode.SelectableValues.Add(new PropertyValue
+                {
+                    LabelText = X509CertificateValidationMode.PeerOrChainTrust.ToString(),
+                    Value = X509CertificateValidationMode.PeerOrChainTrust.ToString(),
+                    OrderNumber = 2
+                });
+                issuerCertificateValidationMode.SelectableValues.Add(new PropertyValue
+                {
+                    LabelText = X509CertificateValidationMode.PeerTrust.ToString(),
+                    Value = X509CertificateValidationMode.PeerTrust.ToString(),
+                    OrderNumber = 3
+                });
+                issuerCertificateValidationMode.SelectableValues.Add(new PropertyValue
+                {
+                    LabelText = X509CertificateValidationMode.None.ToString(),
+                    Value = X509CertificateValidationMode.None.ToString(),
+                    OrderNumber = 4
+                });
                 groups[0].Properties.Add(issuerCertificateValidationMode);
 
-                var subjectRecipientValidationMode = new Property("subjectRecipientValidationMode", "Token Subject Recipient Validation Mode", PropertyType.String, 50, _subjectRecipientValidationModeDefault.ToString()) { DescriptionText = "Rules to use for validation of SAML Token Subject Recipient clause" };
-                subjectRecipientValidationMode.SelectableValues.Add(new PropertyValue(SubjectRecipientValidationMode.ExactMatch.ToString(), SubjectRecipientValidationMode.ExactMatch.ToString(), 1));
-                subjectRecipientValidationMode.SelectableValues.Add(new PropertyValue(SubjectRecipientValidationMode.HostOnly.ToString(), SubjectRecipientValidationMode.HostOnly.ToString(), 2));
-                subjectRecipientValidationMode.SelectableValues.Add(new PropertyValue(SubjectRecipientValidationMode.HostAndScheme.ToString(), SubjectRecipientValidationMode.HostAndScheme.ToString(), 3));
-                subjectRecipientValidationMode.SelectableValues.Add(new PropertyValue(SubjectRecipientValidationMode.None.ToString(), SubjectRecipientValidationMode.None.ToString(), 4));
+
+                var subjectRecipientValidationMode = new Property
+                {
+                    Id = "subjectRecipientValidationMode", 
+                    LabelText = "Token Subject Recipient Validation Mode",
+                    DataType = "String",
+                    OrderNumber = 50,
+                    DefaultValue = _subjectRecipientValidationModeDefault.ToString(),
+                    DescriptionText = "Rules to use for validation of SAML Token Subject Recipient clause"
+                };
+                subjectRecipientValidationMode.SelectableValues.Add(new PropertyValue
+                {
+                    LabelText = SubjectRecipientValidationMode.ExactMatch.ToString(),
+                    Value = SubjectRecipientValidationMode.ExactMatch.ToString(),
+                    OrderNumber = 1
+                });
+                subjectRecipientValidationMode.SelectableValues.Add(new PropertyValue
+                {
+                    LabelText = SubjectRecipientValidationMode.HostOnly.ToString(),
+                    Value = SubjectRecipientValidationMode.HostOnly.ToString(),
+                    OrderNumber = 2
+                });
+                subjectRecipientValidationMode.SelectableValues.Add(new PropertyValue
+                {
+                    LabelText = SubjectRecipientValidationMode.HostAndScheme.ToString(),
+                    Value = SubjectRecipientValidationMode.HostAndScheme.ToString(),
+                    OrderNumber = 3
+                });
+                subjectRecipientValidationMode.SelectableValues.Add(new PropertyValue
+                {
+                    LabelText = SubjectRecipientValidationMode.None.ToString(),
+                    Value = SubjectRecipientValidationMode.None.ToString(),
+                    OrderNumber = 4
+                });
                 groups[0].Properties.Add(subjectRecipientValidationMode);
 
-                var usernameClaim = new Property("usernameClaim", "User Name Attribute Name", PropertyType.String, 60, _usernameClaimDefault) { DescriptionText = "The name saml attribute containing the users name. (Must be present, must be unique, must be valid based on community settings.)" }; ;
-                usernameClaim.Rules.Add(new PropertyRule(typeof(Telligent.Evolution.Controls.PropertyRules.TrimStringRule), false));
+                var usernameClaim = new Property
+                {
+                    Id = "usernameClaim",
+                    LabelText = "User Name Attribute Name",
+                    DataType = "String",
+                    OrderNumber = 60,
+                    DefaultValue = _usernameClaimDefault,
+                    DescriptionText = "The name saml attribute containing the users name. (Must be present, must be unique, must be valid based on community settings.)"
+                };
+                usernameClaim.Rules.Add(new PropertyRule{Name = "trim"});
                 groups[0].Properties.Add(usernameClaim);
 
-                var emailClaim = new Property("emailClaim", "Email Address Attribute name", PropertyType.String, 70, _emailClaimDefault) { DescriptionText = "The name saml attribute containing the users email address. (Must be present, must be unique.)" };
-                emailClaim.Rules.Add(new PropertyRule(typeof(Telligent.Evolution.Controls.PropertyRules.TrimStringRule), false));
+                var emailClaim = new Property
+                {
+                    Id = "emailClaim",
+                    LabelText = "Email Address Attribute name",
+                    DataType = "String",
+                    OrderNumber = 70,
+                    DefaultValue = _emailClaimDefault,
+                    DescriptionText = "The name saml attribute containing the users email address. (Must be present, must be unique.)"
+                };
+                emailClaim.Rules.Add(new PropertyRule{Name = "trim"});
                 groups[0].Properties.Add(emailClaim);
 
                 #endregion
 
                 #region AuthN
 
-                var idpAuthRequestType = new Property("idpAuthRequestType", "AuthN Binding Type", PropertyType.String, 100, _idpAuthRequestTypeDefault.ToString()) { DescriptionText = "The AuthN request type to intiate the saml login (IDP_Initiated is a simple redirect without AuthN payload)" };
-                idpAuthRequestType.SelectableValues.Add(new PropertyValue(AuthnBinding.IDP_Initiated.ToString(), AuthnBinding.IDP_Initiated.ToString(), 1));
-                idpAuthRequestType.SelectableValues.Add(new PropertyValue(AuthnBinding.Redirect.ToString(), AuthnBinding.Redirect.ToString(), 2));
-                //idpAuthRequestType.SelectableValues.Add(new PropertyValue(AuthnBinding.SignedRedirect.ToString(), AuthnBinding.SignedRedirect.ToString(), 3));  //not yet supported
-                idpAuthRequestType.SelectableValues.Add(new PropertyValue(AuthnBinding.POST.ToString(), AuthnBinding.POST.ToString(), 4));
-                idpAuthRequestType.SelectableValues.Add(new PropertyValue(AuthnBinding.SignedPOST.ToString(), AuthnBinding.SignedPOST.ToString(), 5));
-                idpAuthRequestType.SelectableValues.Add(new PropertyValue(AuthnBinding.WSFededation.ToString(), AuthnBinding.WSFededation.ToString(), 6));
+                var idpAuthRequestType = new Property
+                {
+                    Id = "idpAuthRequestType",
+                    LabelText = "AuthN Binding Type",
+                    DataType = "String",
+                    OrderNumber = 100,
+                    DefaultValue = _idpAuthRequestTypeDefault.ToString(),
+                    DescriptionText = "The AuthN request type to intiate the saml login (IDP_Initiated is a simple redirect without AuthN payload)"
+                };
+                idpAuthRequestType.SelectableValues.Add(new PropertyValue
+                {
+                    LabelText = AuthnBinding.IDP_Initiated.ToString(),
+                    Value = AuthnBinding.IDP_Initiated.ToString(),
+                    OrderNumber = 1
+                });
+                idpAuthRequestType.SelectableValues.Add(new PropertyValue
+                {
+                    LabelText = AuthnBinding.Redirect.ToString(),
+                    Value = AuthnBinding.Redirect.ToString(),
+                    OrderNumber = 2
+                });
+                //idpAuthRequestType.SelectableValues.Add(new PropertyValue
+                //{
+                //  LabelText = AuthnBinding.SignedRedirect.ToString(),
+                //  Value = AuthnBinding.SignedRedirect.ToString(),
+                //  OrderNumber = 3
+                //});//not yet supported
+                idpAuthRequestType.SelectableValues.Add(new PropertyValue
+                {
+                    LabelText = AuthnBinding.POST.ToString(),
+                    Value = AuthnBinding.POST.ToString(),
+                    OrderNumber = 4
+                });
+                idpAuthRequestType.SelectableValues.Add(new PropertyValue
+                {
+                    LabelText = AuthnBinding.SignedPOST.ToString(),
+                    Value = AuthnBinding.SignedPOST.ToString(),
+                    OrderNumber = 5
+                });
+                idpAuthRequestType.SelectableValues.Add(new PropertyValue
+                {
+                    LabelText = AuthnBinding.WSFededation.ToString(),
+                    Value = AuthnBinding.WSFededation.ToString(),
+                    OrderNumber = 6
+                });
                 groups[1].Properties.Add(idpAuthRequestType);
 
-                var authThumbprint = new Property("authThumbprint", "AuthN Certificate Thumbprint", PropertyType.String, 110, _authThumbprintDefault) { DescriptionText = "The Thumbprint of a private key located in the localmachine/personal store, for which the applicaiton pool user has been given permissions; required for signed AuthN request types" };
-                authThumbprint.Rules.Add(new PropertyRule(typeof(Telligent.Services.SamlAuthenticationPlugin.Components.CleanThumbprintRule), false));
+                var authThumbprint = new Property
+                {
+                    Id = "authThumbprint",
+                    LabelText = "AuthN Certificate Thumbprint",
+                    DataType = "String",
+                    OrderNumber = 110,
+                    DefaultValue = _authThumbprintDefault,
+                    DescriptionText = "The Thumbprint of a private key located in the localmachine/personal store, for which the applicaiton pool user has been given permissions; required for signed AuthN request types"
+                };
+                authThumbprint.Rules.Add(new PropertyRule { Name = "cleanthumbprint" });
                 groups[1].Properties.Add(authThumbprint);
 
 
@@ -180,35 +313,104 @@ namespace Telligent.Services.SamlAuthenticationPlugin
 
                 #region Logout
 
-                var logoutUrlBehavior = new Property("logoutUrlBehavior", "Logout Behavior", PropertyType.String, 200, _logoutUrlBehaviorDefault.ToString()) { DescriptionText = "Controls how the site uses the logout Url (Internal the URL is not used or requred; the default platform logout is used)" };
-                logoutUrlBehavior.SelectableValues.Add(new PropertyValue(LogoutUrlBehavior.INTERNAL.ToString(), LogoutUrlBehavior.INTERNAL.ToString(), 1));
-                logoutUrlBehavior.SelectableValues.Add(new PropertyValue(LogoutUrlBehavior.EXTERNAL.ToString(), LogoutUrlBehavior.EXTERNAL.ToString(), 2));
-                logoutUrlBehavior.SelectableValues.Add(new PropertyValue(LogoutUrlBehavior.IFRAME.ToString(), LogoutUrlBehavior.IFRAME.ToString(), 3));
+                var logoutUrlBehavior = new Property
+                {
+                    Id = "logoutUrlBehavior",
+                    LabelText = "Logout Behavior",
+                    DataType = "String",
+                    OrderNumber = 200,
+                    DefaultValue = "_logoutUrlBehaviorDefault.ToString()",
+                    DescriptionText = "Controls how the site uses the logout Url (Internal the URL is not used or required; the default platform logout is used)"
+                };
+                logoutUrlBehavior.SelectableValues.Add(new PropertyValue
+                {
+                    LabelText = LogoutUrlBehavior.INTERNAL.ToString(),
+                    Value = LogoutUrlBehavior.INTERNAL.ToString(),
+                    OrderNumber = 1
+                });
+                logoutUrlBehavior.SelectableValues.Add(new PropertyValue
+                {
+                    LabelText = LogoutUrlBehavior.EXTERNAL.ToString(),
+                    Value = LogoutUrlBehavior.EXTERNAL.ToString(),
+                    OrderNumber = 2
+                });
+                logoutUrlBehavior.SelectableValues.Add(new PropertyValue
+                {
+                    LabelText = LogoutUrlBehavior.IFRAME.ToString(),
+                    Value = LogoutUrlBehavior.IFRAME.ToString(),
+                    OrderNumber = 3
+                });
                 groups[2].Properties.Add(logoutUrlBehavior);
 
-
-                var logoutUrl = new Property("logoutUrl", "Identity Provider Logout Url", PropertyType.String, 210, _logoutUrlDefault) { DescriptionText = "Identity Provider Logout Url (used by Iframe or external options)" };
-                logoutUrl.Rules.Add(new PropertyRule(typeof(Telligent.Evolution.Controls.PropertyRules.TrimStringRule), false));
+                var logoutUrl = new Property
+                {
+                    Id = "logoutUrl",
+                    LabelText = "Identity Provider Logout Url",
+                    DataType = "String",
+                    DefaultValue = _logoutUrlDefault,
+                    DescriptionText = "Identity Provider Logout Url (used by Iframe or external options)"
+                };
+                logoutUrl.Rules.Add(new PropertyRule {Name = "trim"});
                 groups[2].Properties.Add(logoutUrl);
 
                 #endregion
 
                 #region Options
-                var allowTokenMatchingByEmailAddress = new Property("allowTokenMatchingByEmailAddress", "Lookup Users By Email", PropertyType.Bool, 50, _allowTokenMatchingByEmailAddressDefault.ToString()) { DescriptionText = "Allow the email address to be used to locate an existing user account if the username doesnt match." };
+
+                var allowTokenMatchingByEmailAddress = new Property
+                {
+                    Id = "allowTokenMatchingByEmailAddress",
+                    LabelText = "Lookup Users By Email",
+                    DataType = "Bool",
+                    OrderNumber = 50,
+                    DefaultValue = _allowTokenMatchingByEmailAddressDefault.ToString(),
+                    DescriptionText = "Allow the email address to be used to locate an existing user account if the username does not match."
+                };
                 groups[3].Properties.Add(allowTokenMatchingByEmailAddress);
 
-                var persistClaims = new Property("persistClaims", "Persist Claims", PropertyType.Bool, 70, "false") { DescriptionText = "If checked, the claim collection will be stored in the database and be avaiable durning non login events." };
+                var persistClaims = new Property
+                {
+                    Id = "persistClaims",
+                    LabelText = "Persist Claims",
+                    DataType = "Bool",
+                    OrderNumber = 70,
+                    DefaultValue = "false",
+                    DescriptionText = "If checked, the claim collection will be stored in the database and be available during non login events."
+                };
                 groups[3].Properties.Add(persistClaims);
 
-                var secureCookie = new Property("secureCookie", "Force HTTPS", PropertyType.Bool, 80, "true") { DescriptionText = "If checked, saml token data will be passed using a secure only (https cookie) uncheck only if your site doesnt support HTTPS (less secure)." };
+                var secureCookie = new Property
+                {
+                    Id = "secureCookie",
+                    LabelText = "Force HTTPS",
+                    DataType = "Bool",
+                    OrderNumber = 80,
+                    DefaultValue = "true",
+                    DescriptionText = "If checked, saml token data will be passed using a secure only (https cookie) uncheck only if your site does not support HTTPS (less secure)."
+                };
                 groups[3].Properties.Add(secureCookie);
 
-                var iconUrl = new Property("iconUrl", "The URL for the OAuth image", PropertyType.String, 120, _iconUrlDefault) { DescriptionText = "overrides the built in SAML oauth image" };
-                iconUrl.Rules.Add(new PropertyRule(typeof(Telligent.Evolution.Controls.PropertyRules.TrimStringRule), false));
+                var iconUrl = new Property
+                {
+                    Id = "iconUrl",
+                    LabelText = "The URL for the OAuth image",
+                    DataType = "String",
+                    OrderNumber = 120,
+                    DefaultValue = _iconUrlDefault,
+                    DescriptionText = "Overrides the built in SAML oauth image"
+                };
+                iconUrl.Rules.Add(new PropertyRule{Name = "trim"});
                 groups[3].Properties.Add(iconUrl);
 
-                groups[3].Properties.Add(new Property("samlCookieName", "SAML Cookie Name", PropertyType.String, 3, "saml"));
-
+                var cookieName = new Property
+                {
+                    Id = "samlCookieName",
+                    LabelText = "SAML Cookie Name",
+                    DataType = "String",
+                    OrderNumber = 3,
+                    DefaultValue = "saml"
+                };
+                groups[3].Properties.Add(cookieName);
 
                 #endregion
 
@@ -250,7 +452,7 @@ namespace Telligent.Services.SamlAuthenticationPlugin
                 SqlData.SaveSamlToken(samlTokenData);
             }
 
-            var apiUser = _usersApi.Get(new UsersGetOptions() { Id = e.Id.Value });
+            var apiUser = Apis.Get<IUsers>().Get(new UsersGetOptions() { Id = e.Id.Value });
 
             //raise new SamlUserCreated Event
             try
@@ -259,7 +461,8 @@ namespace Telligent.Services.SamlAuthenticationPlugin
             }
             catch (Exception ex)
             {
-                _eventLogApi.Write("SamlOAuthClient Error OnAfterUserCreate: " + ex.Message + " : " + ex.StackTrace, new EventLogEntryWriteOptions() { Category = "SAML", EventId = 1, EventType = "Error"  });
+                Apis.Get<IExceptions>().Log(ex);
+                Apis.Get<IEventLog>().Write("SamlOAuthClient Error OnAfterUserCreate: " + ex.Message + " : " + ex.StackTrace, new EventLogEntryWriteOptions() { Category = "SAML", EventId = 1, EventType = "Error"  });
             }
 
         }
@@ -302,13 +505,14 @@ namespace Telligent.Services.SamlAuthenticationPlugin
                 CookieHelper.DeleteCookie(afterAuthenticatedCookie.Name);
 
                 //Get the API user and the last SAML token to keep things API friendly
-                var apiUser = _usersApi.Get(new UsersGetOptions() { Id = e.Id.Value });
+                var apiUser = Apis.Get<IUsers>().Get(new UsersGetOptions() { Id = e.Id.Value });
 
                 SamlEvents.Instance.OnAfterAuthenticate(apiUser, samlTokenData);
             }
             catch (Exception ex)
             {
-                _eventLogApi.Write("SamlOAuthClient Error OnAfterAuthenticate: " + ex.Message + " : " + ex.StackTrace, new EventLogEntryWriteOptions() { Category = "SAML", EventId = 1, EventType = "Error" });
+                Apis.Get<IExceptions>().Log(ex);
+                Apis.Get<IEventLog>().Write("SamlOAuthClient Error OnAfterAuthenticate: " + ex.Message + " : " + ex.StackTrace, new EventLogEntryWriteOptions() { Category = "SAML", EventId = 1, EventType = "Error" });
             }
 
         }
@@ -321,7 +525,8 @@ namespace Telligent.Services.SamlAuthenticationPlugin
             }
             catch (Exception ex)
             {
-                _eventLogApi.Write("SamlOAuthClient Error AfterUserDelete: " + ex.Message + " : " + ex.StackTrace, new EventLogEntryWriteOptions() { Category = "SAML", EventId = 1, EventType = "Error" });
+                Apis.Get<IExceptions>().Log(ex);
+                Apis.Get<IEventLog>().Write("SamlOAuthClient Error AfterUserDelete: " + ex.Message + " : " + ex.StackTrace, new EventLogEntryWriteOptions() { Category = "SAML", EventId = 1, EventType = "Error" });
             }
         }
 
@@ -329,14 +534,14 @@ namespace Telligent.Services.SamlAuthenticationPlugin
 
         #region Properties
 
-        public string LoginUrl => SecureCookie ? _urlApi.Absolute("~/samlauthn").Replace("http:", "https:") : _urlApi.Absolute("~/samlauthn");
+        public string LoginUrl => SecureCookie ? Apis.Get<IUrl>().Absolute("~/samlauthn").Replace("http:", "https:") : Apis.Get<IUrl>().Absolute("~/samlauthn");
         public string IdpUrl => Configuration.GetString("idpUrl");
         public SamlBinding IdpBindingType => Enum.TryParse(Configuration.GetString("idpBindingType"), true, out SamlBinding configuredBinding) ? configuredBinding : _idpBindingTypeDefault;
         public AuthnBinding IdpAuthRequestType => Enum.TryParse<AuthnBinding>(Configuration.GetString("idpAuthRequestType"), true, out var configuredBinding) ? configuredBinding : _idpAuthRequestTypeDefault;
         public LogoutUrlBehavior LogoutUrlBehavior => Enum.TryParse<LogoutUrlBehavior>(Configuration.GetString("logoutUrlBehavior"), true, out var configuredBehavior) ? configuredBehavior : _logoutUrlBehaviorDefault;
         public string LogoutUrl => LogoutUrlBehavior == LogoutUrlBehavior.EXTERNAL ? IdpLogoutUrl : string.Empty;
         public string IdpLogoutUrl => IdpAuthRequestType == AuthnBinding.WSFededation ? $"{IdpUrl}?wa=wsignout1.0" : Configuration.GetString("logoutUrl");
-        public string AuthNCertThumbrint => Configuration.GetString("authThumbprint");
+        public string AuthNCertThumbprint => Configuration.GetString("authThumbprint");
         public string SamlCookieName => Configuration.GetString("samlCookieName");
         public string clientType => string.IsNullOrEmpty(Configuration.GetString("samlCookieName")) ? "saml" : Configuration.GetString("samlCookieName");
 
@@ -348,13 +553,13 @@ namespace Telligent.Services.SamlAuthenticationPlugin
         /// at the end of our AuthenticateRequest() method.
         /// </summary>
         public string ReturnUrlParameter => SamlHelpers.ReturnUrlParameterName;
-        public bool AllowTokenMatchingByEmailAddress => Configuration.GetBool("allowTokenMatchingByEmailAddress");
+        public bool AllowTokenMatchingByEmailAddress => Configuration.GetBool("allowTokenMatchingByEmailAddress").Value;
         //required by IAuthenticationPlugin
         public bool UseHttpContextUser => true;
         public string UserNameAttributeName => Configuration.GetString("usernameClaim");
         public string EmailAttributeName => Configuration.GetString("emailClaim");
-        public bool PersistClaims => Configuration.GetBool("persistClaims");
-        public bool SecureCookie => Configuration.GetBool("secureCookie");
+        public bool PersistClaims => Configuration.GetBool("persistClaims").Value;
+        public bool SecureCookie => Configuration.GetBool("secureCookie").Value;
         public X509CertificateValidationMode CertificateValidationMode => Enum.TryParse<X509CertificateValidationMode>(Configuration.GetString("issuerCertificateValidationMode"), true, out var configuredValidationMode) ? configuredValidationMode : _issuerCertificateValidationModeDefault;
         public SubjectRecipientValidationMode SubjectRecipientValidationMode => Enum.TryParse<SubjectRecipientValidationMode>(Configuration.GetString("subjectRecipientValidationMode"), true, out var configuredValidationMode) ? configuredValidationMode : _subjectRecipientValidationModeDefault;
         public string TrustedIssuerThumbprint => Configuration.GetString("issuerThumbprint");
@@ -414,9 +619,9 @@ namespace Telligent.Services.SamlAuthenticationPlugin
         private static string LoadPageXml(string pageName)
         {
             var xml = new XmlDocument();
-            xml.LoadXml(EmbeddedResources.GetString("Telligent.Services.SamlAuthenticationPlugin.Resources.Pages." + pageName + ".xml"));
+            xml.LoadXml(EmbeddedResources.GetString("Verint.Services.SamlAuthenticationPlugin.Resources.Pages." + pageName + ".xml"));
             var xmlNode = xml.SelectSingleNode("theme/contentFragmentPages/contentFragmentPage");
-            return xmlNode != null ? xmlNode.OuterXml : String.Empty;
+            return xmlNode != null ? xmlNode.OuterXml : string.Empty;
         }
 
         #endregion
@@ -425,23 +630,22 @@ namespace Telligent.Services.SamlAuthenticationPlugin
         
         protected virtual void ProcessReturnUrl()
         {
+            var apiCoreUrls = Apis.Get<ICoreUrls>();
             var returnUrl = SamlHelpers.GetCookieReturnUrl();
 
             SamlHelpers.ClearCookieReturnUrl();
 
             if (string.IsNullOrEmpty(returnUrl))
             {
-                returnUrl = _coreUrlsApi.Home();
+                returnUrl = apiCoreUrls.Home();
             }
 
             if (!string.IsNullOrEmpty(returnUrl) && SamlHelpers.IsPathOnSameServer(returnUrl, HttpContext.Current.Request.Url))
                 HttpContext.Current.Response.Redirect(returnUrl, true);
 
-            HttpContext.Current.Response.Redirect(_coreUrlsApi.Home(), true);
+            HttpContext.Current.Response.Redirect(apiCoreUrls.Home(), true);
         }
-
-
-
+        
         #endregion
 
         #region IOAuthClient
@@ -452,10 +656,7 @@ namespace Telligent.Services.SamlAuthenticationPlugin
         /// </summary>
         public string CallbackUrl
         {
-            get
-            {
-                return _coreUrlsApi.LogIn(new CoreUrlLoginOptions() { ReturnToCurrentUrl = false }) + "?oauth_data_token_key=TOKEN";
-            }
+            get => Apis.Get<ICoreUrls>().LogIn(new CoreUrlLoginOptions() { ReturnToCurrentUrl = false }) + "?oauth_data_token_key=TOKEN";
             set
             {
 
@@ -468,42 +669,30 @@ namespace Telligent.Services.SamlAuthenticationPlugin
             {
                 //Identity server (wsfed?wa=signout1.0) sends request "samlresponse/wa=wsignoutcleanup1.0"(passive logout) and after that we should just reload page
                 if (LogoutUrlBehavior == LogoutUrlBehavior.IFRAME && IdpAuthRequestType == AuthnBinding.WSFededation)
-                    return String.Format(@"<div style=""display:none""><iframe id=""saml-logout"" width=""0"" height=""0"" src=""{0}"" onload=""window.location.reload();""></iframe></div>", IdpLogoutUrl);
+                    return
+                        $@"<div style=""display:none""><iframe id=""saml-logout"" width=""0"" height=""0"" src=""{IdpLogoutUrl}"" onload=""window.location.reload();""></iframe></div>";
 
                 if (LogoutUrlBehavior == LogoutUrlBehavior.IFRAME)
-                    return String.Format(@"<div style=""display:none""><iframe id=""saml-logout"" width=""0"" height=""0"" src=""{0}"" onload=""jQuery(document).trigger('oauthsignout');""></iframe></div>", IdpLogoutUrl);
+                    return
+                        $@"<div style=""display:none""><iframe id=""saml-logout"" width=""0"" height=""0"" src=""{IdpLogoutUrl}"" onload=""jQuery(document).trigger('oauthsignout');""></iframe></div>";
 
                 if (LogoutUrlBehavior == LogoutUrlBehavior.EXTERNAL && IdpAuthRequestType == AuthnBinding.WSFededation && !string.IsNullOrWhiteSpace(IdpLogoutUrl))
-                    return String.Format(@"<script type='text/javascript'>window.location='{0}&wreply={1}';</script>", IdpLogoutUrl, _urlApi.Absolute("~/logout"));
+                    return
+                        $@"<script type='text/javascript'>window.location='{IdpLogoutUrl}&wreply={Apis.Get<IUrl>().Absolute("~/logout")}';</script>";
 
                 return string.Empty;
             }
         }
 
-        public string ClientName
-        {
-            get { return PluginName; }
-        }
+        public string ClientName => Name;
 
-        public string ClientType
-        {
-            get { return clientType; }
-        }
+        public string ClientType => clientType;
 
-        public string ConsumerKey
-        {
-            get { return string.Empty; }
-        }
+        public string ConsumerKey => string.Empty;
 
-        public string ConsumerSecret
-        {
-            get { return string.Empty; }
-        }
+        public string ConsumerSecret => string.Empty;
 
-        public bool Enabled
-        {
-            get { return true; }
-        }
+        public bool Enabled => true;
 
         public string GetAuthorizationLink()
         {
@@ -536,19 +725,16 @@ namespace Telligent.Services.SamlAuthenticationPlugin
                     if (!string.IsNullOrEmpty(configuredIconUrl))
                         return configuredIconUrl;
 
-                    return SamlHelpers.GetWebResourceUrl(this.GetType(), "Telligent.Services.SamlAuthenticationPlugin.Resources.Images.saml.png");
+                    return SamlHelpers.GetWebResourceUrl(this.GetType(), "Verint.Services.SamlAuthenticationPlugin.Resources.Images.saml.png");
                 }
                 catch
                 {
-                    return SamlHelpers.GetWebResourceUrl(this.GetType(), "Telligent.Services.SamlAuthenticationPlugin.Resources.Images.saml.png");
+                    return SamlHelpers.GetWebResourceUrl(this.GetType(), "Verint.Services.SamlAuthenticationPlugin.Resources.Images.saml.png");
                 }
             }
         }
 
-        public string Privacy
-        {
-            get { return string.Empty; }
-        }
+        public string Privacy => string.Empty;
 
 
         public OAuthData ProcessLogin(HttpContextBase context)
@@ -577,7 +763,6 @@ namespace Telligent.Services.SamlAuthenticationPlugin
                 //this object is stored in temporary storage by the oauth handler, its guid is placed into the return url into the "TOKEN" placeholder.
                 //the expectation of this processing is the return url at this time is to the login page, and that any login based return url should be double encoded
                 return samlTokenData.GetOAuthData();
-
             }
 
             //if this is not a sign-in response, we should probably redirect to login.aspx
@@ -585,21 +770,13 @@ namespace Telligent.Services.SamlAuthenticationPlugin
             return null;
         }
         
-        public string ThemeColor
-        {
-            get { return "006699"; }
-        }
+        public string ThemeColor => "006699";
 
         #endregion
 
         #region IScriptedContentFragmentFactoryDefaultProvider Members
 
-        private readonly Guid Identifier = new Guid("a699e912b5654ef98d195877c8f9eb41");
-
-        public Guid ScriptedContentFragmentFactoryDefaultIdentifier
-        {
-            get { return Identifier; }
-        }
+        public Guid ScriptedContentFragmentFactoryDefaultIdentifier => new Guid("a699e912b5654ef98d195877c8f9eb41");
 
         #endregion
 
@@ -607,7 +784,7 @@ namespace Telligent.Services.SamlAuthenticationPlugin
 
         object lockObject = new object();
 
-        private void InitializeScheama()
+        private void InitializeSchema()
         {
             if (PersistClaims)
             {
@@ -623,7 +800,8 @@ namespace Telligent.Services.SamlAuthenticationPlugin
                     }
                     catch (Exception ex)
                     {
-                        _eventLogApi.Write("SamlOAuthClient Error InitializeScheama (you may need to manually run the sql install script): " + ex.Message + " : " + ex.StackTrace, new EventLogEntryWriteOptions() { Category = "SAML", EventId = 1, EventType = "Error" });
+                        Apis.Get<IExceptions>().Log(ex);
+                        Apis.Get<IEventLog>().Write("SamlOAuthClient Error InitializeSchema (you may need to manually run the sql install script): " + ex.Message + " : " + ex.StackTrace, new EventLogEntryWriteOptions() { Category = "SAML", EventId = 1, EventType = "Error" });
                     }
                 }
             }
@@ -651,7 +829,7 @@ namespace Telligent.Services.SamlAuthenticationPlugin
             };
 
             foreach (var definitionFile in definitionFiles)
-                using (var stream = EmbeddedResources.GetStream("Telligent.Services.SamlAuthenticationPlugin.Resources.Widgets." + definitionFile))
+                using (var stream = EmbeddedResources.GetStream("Verint.Services.SamlAuthenticationPlugin.Resources.Widgets." + definitionFile))
                     FactoryDefaultScriptedContentFragmentProviderFiles.AddUpdateDefinitionFile(this, definitionFile, stream);
 
             ContentFragments.Enable(ThemeTypes.Site, ContentFragments.GetScriptedContentFragmentTypeString(new Guid("63b5fbf0d2db41eaa165c27ac43ee0f7"))); //Login Auto Select
@@ -685,11 +863,11 @@ namespace Telligent.Services.SamlAuthenticationPlugin
             #endregion
 
             #region Create Database Table if required
-            InitializeScheama();
+            InitializeSchema();
             #endregion
         }
 
-        void InsertWidget(Evolution.Extensibility.UI.Version1.Theme theme, string pageName, bool isCustom, string existingContentFragmentType, ContentFragmentPlacement placement, string regionName, string contentFragmentType, string contentFragmentConfiguration, string contentFragmentWrappingFormat)
+        void InsertWidget(Theme theme, string pageName, bool isCustom, string existingContentFragmentType, ContentFragmentPlacement placement, string regionName, string contentFragmentType, string contentFragmentConfiguration, string contentFragmentWrappingFormat)
         {
             ThemePageContentFragments.RemoveFromDefault(theme, pageName, isCustom, contentFragmentType);
             ThemePageContentFragments.InsertInDefault(theme, pageName, isCustom, existingContentFragmentType, placement, regionName, contentFragmentType, contentFragmentConfiguration, contentFragmentWrappingFormat);
@@ -706,16 +884,11 @@ namespace Telligent.Services.SamlAuthenticationPlugin
 
         }
 
-        Version IInstallablePlugin.Version
-        {
-            get { return GetType().Assembly.GetName().Version; }
-        }
+        Version IInstallablePlugin.Version => GetType().Assembly.GetName().Version;
+
         #endregion
 
-        public string[] Categories
-        {
-            get { return PluginCategories.ToArray(); }
-        }
+        public string[] Categories => PluginCategories.ToArray();
     }
 }
 

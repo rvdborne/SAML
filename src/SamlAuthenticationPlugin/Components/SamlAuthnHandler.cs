@@ -10,7 +10,7 @@ using Telligent.Evolution.Extensibility;
 using Telligent.Evolution.Extensibility.Api.Version1;
 using Telligent.Evolution.Extensibility.Version1;
 
-namespace Telligent.Services.SamlAuthenticationPlugin.Components
+namespace Verint.Services.SamlAuthenticationPlugin.Components
 {
     public class SamlAuthnHandler : IHttpHandler
 
@@ -94,7 +94,7 @@ namespace Telligent.Services.SamlAuthenticationPlugin.Components
                     break;
 
                 case AuthnBinding.SignedRedirect:
-                    var redirectThumbprint = samlPlugin.AuthNCertThumbrint;
+                    var redirectThumbprint = samlPlugin.AuthNCertThumbprint;
 
                     if (string.IsNullOrEmpty(redirectThumbprint))
                         throw new ArgumentNullException("Invalid configuration, the SAML Plugin is set to sign AuthN requests, but no certificate thumbprint is configured", "samlPlugin.AuthNCertThumbrint");
@@ -109,7 +109,7 @@ namespace Telligent.Services.SamlAuthenticationPlugin.Components
                     break;
 
                 case AuthnBinding.SignedPOST:
-                    var postThumbprint = samlPlugin.AuthNCertThumbrint;
+                    var postThumbprint = samlPlugin.AuthNCertThumbprint;
 
                     if (string.IsNullOrEmpty(postThumbprint))
                         throw new ArgumentNullException("Invalid configuration, the SAML Plugin is set to sign AuthN requests, but no certificate thumbprint is configured", "samlPlugin.AuthNCertThumbrint");

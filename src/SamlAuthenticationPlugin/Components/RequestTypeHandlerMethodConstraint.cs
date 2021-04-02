@@ -2,7 +2,7 @@
 using System.Web.Routing;
 using Telligent.Evolution.Extensibility.Urls.Version1;
 
-namespace Telligent.Services.SamlAuthenticationPlugin.Components
+namespace Verint.Services.SamlAuthenticationPlugin.Components
 {
     public class RequestTypeHandlerMethodConstraint : IComparableRouteConstraint, IRouteConstraint
     {

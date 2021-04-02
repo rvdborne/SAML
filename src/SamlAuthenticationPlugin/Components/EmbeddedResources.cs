@@ -1,7 +1,7 @@
 ﻿using System.IO;
 using System.Text;
 
-namespace Telligent.Services.SamlAuthenticationPlugin.Components
+namespace Verint.Services.SamlAuthenticationPlugin.Components
 {
     internal static class EmbeddedResources
     {

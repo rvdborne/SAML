@@ -1,7 +1,7 @@
 ﻿using Telligent.Evolution.Extensibility.Version1;
-using Telligent.Services.SamlAuthenticationPlugin.Components;
+using Verint.Services.SamlAuthenticationPlugin.Components;
 
-namespace Telligent.Services.SamlAuthenticationPlugin.Extensibility
+namespace Verint.Services.SamlAuthenticationPlugin.Extensibility
 {
     /// <summary>
     /// Usually the username is just an attribute in the SAML token, in the case we need to use logic (like to strip a domain name or concat two fields, or parse the email)

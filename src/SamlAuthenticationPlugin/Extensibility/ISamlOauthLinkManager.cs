@@ -1,7 +1,7 @@
 ﻿using Telligent.Evolution.Extensibility.Version1;
-using Telligent.Services.SamlAuthenticationPlugin.Components;
+using Verint.Services.SamlAuthenticationPlugin.Components;
 
-namespace Telligent.Services.SamlAuthenticationPlugin.Extensibility
+namespace Verint.Services.SamlAuthenticationPlugin.Extensibility
 {
     /// <summary>
     /// Allows the plugin to use unsupported code to ensure the proper entries exist in the te_OAuth_Links table prior to sending the user

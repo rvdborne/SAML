@@ -4,9 +4,9 @@ using System.Data;
 using System.Data.SqlClient;
 using Telligent.Evolution.Extensibility;
 using Telligent.Evolution.Extensibility.Api.Version1;
-using Telligent.Services.SamlAuthenticationPlugin.Components;
+using Verint.Services.SamlAuthenticationPlugin.Components;
 
-namespace Telligent.Services.SamlAuthenticationPlugin
+namespace Verint.Services.SamlAuthenticationPlugin
 {
     /// <summary>
     /// Custom SqlDataProvider for Saml20AuthenticationPlugin

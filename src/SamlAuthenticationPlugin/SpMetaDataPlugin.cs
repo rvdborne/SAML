@@ -1,11 +1,12 @@
-﻿using Telligent.Evolution.Extensibility.UI.Version1;
+﻿using Telligent.Evolution.Extensibility.Configuration.Version1;
+using Telligent.Evolution.Extensibility.UI.Version1;
 using Telligent.Evolution.Extensibility.Version1;
-using Telligent.Services.SamlAuthenticationPlugin.Extensions;
+using Verint.Services.SamlAuthenticationPlugin.Extensions;
 using IConfigurablePlugin = Telligent.Evolution.Extensibility.Version2.IConfigurablePlugin;
 using IPluginConfiguration = Telligent.Evolution.Extensibility.Version2.IPluginConfiguration;
 using IRequiredConfigurationPlugin = Telligent.Evolution.Extensibility.Version2.IRequiredConfigurationPlugin;
 
-namespace Telligent.Services.SamlAuthenticationPlugin
+namespace Verint.Services.SamlAuthenticationPlugin
 {
     public class SpMetaDataPlugin : IScriptedContentFragmentExtension, IRequiredConfigurationPlugin, ISingletonPlugin
     {
@@ -36,18 +37,18 @@ namespace Telligent.Services.SamlAuthenticationPlugin
             Configuration = configuration;
         }
 
-        Evolution.Extensibility.Configuration.Version1.PropertyGroup[] IConfigurablePlugin.ConfigurationOptions
+        PropertyGroup[] IConfigurablePlugin.ConfigurationOptions
         {
             get
             {
-                var group = new Evolution.Extensibility.Configuration.Version1.PropertyGroup
+                var group = new PropertyGroup
                 {
                     Id = "metadata",
                     LabelText = "Metadata",
                     OrderNumber = 1
                 };
 
-                var idpMetadataUrl = new Evolution.Extensibility.Configuration.Version1.Property
+                var idpMetadataUrl = new Property
                 {
                     Id = "idpmetadataurl",
                     LabelText = "IdP MetaData URL",
@@ -58,7 +59,7 @@ namespace Telligent.Services.SamlAuthenticationPlugin
                 };
                 group.Properties.Add(idpMetadataUrl);
 
-                var idpPrivateKey = new Evolution.Extensibility.Configuration.Version1.Property
+                var idpPrivateKey = new Property
                 {
                     Id = "idpprivatekey",
                     LabelText = "IdP Private Key",
@@ -69,7 +70,7 @@ namespace Telligent.Services.SamlAuthenticationPlugin
                 };
                 group.Properties.Add(idpPrivateKey);
 
-                var entityId = new Evolution.Extensibility.Configuration.Version1.Property
+                var entityId = new Property
                 {
                     Id = "entityid",
                     LabelText = "Metadata Entity Id",
@@ -80,7 +81,7 @@ namespace Telligent.Services.SamlAuthenticationPlugin
                 };
                 group.Properties.Add(entityId);
 
-                var nameIdFormat = new Evolution.Extensibility.Configuration.Version1.Property
+                var nameIdFormat = new Property
                 {
                     Id = "nameidformat",
                     LabelText = "NameId Format",
@@ -89,16 +90,16 @@ namespace Telligent.Services.SamlAuthenticationPlugin
                     DefaultValue = _nameIdFormatUnspecified,
                     DescriptionText = "This is the Format of the NameId. (Optional)"
                 };
-                nameIdFormat.SelectableValues.Add(new Evolution.Extensibility.Configuration.Version1.PropertyValue{ Value = _nameIdFormatUnspecified, LabelText = "Unspecified", OrderNumber = 1 });
-                nameIdFormat.SelectableValues.Add(new Evolution.Extensibility.Configuration.Version1.PropertyValue{ Value = _nameIdFormatEmail, LabelText = "Email", OrderNumber = 2 });
-                nameIdFormat.SelectableValues.Add(new Evolution.Extensibility.Configuration.Version1.PropertyValue{ Value = _nameIdFormatEntity, LabelText = "Entity", OrderNumber = 3 });
-                nameIdFormat.SelectableValues.Add(new Evolution.Extensibility.Configuration.Version1.PropertyValue{ Value = _nameIdFormatTransient, LabelText = "Transient", OrderNumber = 4 });
-                nameIdFormat.SelectableValues.Add(new Evolution.Extensibility.Configuration.Version1.PropertyValue{ Value = _nameIdFormatPersistent, LabelText = "Persistent", OrderNumber = 5 });
-                nameIdFormat.SelectableValues.Add(new Evolution.Extensibility.Configuration.Version1.PropertyValue{ Value = _nameIdFormatEncrypted, LabelText = "Encrypted", OrderNumber = 6 });
-                nameIdFormat.SelectableValues.Add(new Evolution.Extensibility.Configuration.Version1.PropertyValue{ Value = _nameIdFormatKerberos, LabelText = "Kerberos", OrderNumber = 7 });
+                nameIdFormat.SelectableValues.Add(new PropertyValue{ Value = _nameIdFormatUnspecified, LabelText = "Unspecified", OrderNumber = 1 });
+                nameIdFormat.SelectableValues.Add(new PropertyValue{ Value = _nameIdFormatEmail, LabelText = "Email", OrderNumber = 2 });
+                nameIdFormat.SelectableValues.Add(new PropertyValue{ Value = _nameIdFormatEntity, LabelText = "Entity", OrderNumber = 3 });
+                nameIdFormat.SelectableValues.Add(new PropertyValue{ Value = _nameIdFormatTransient, LabelText = "Transient", OrderNumber = 4 });
+                nameIdFormat.SelectableValues.Add(new PropertyValue{ Value = _nameIdFormatPersistent, LabelText = "Persistent", OrderNumber = 5 });
+                nameIdFormat.SelectableValues.Add(new PropertyValue{ Value = _nameIdFormatEncrypted, LabelText = "Encrypted", OrderNumber = 6 });
+                nameIdFormat.SelectableValues.Add(new PropertyValue{ Value = _nameIdFormatKerberos, LabelText = "Kerberos", OrderNumber = 7 });
                 group.Properties.Add(nameIdFormat);
 
-                var authnRequestSigned = new Evolution.Extensibility.Configuration.Version1.Property
+                var authnRequestSigned = new Property
                 {
                     Id = "authnsigned",
                     LabelText = "AuthN Requests Signed",
@@ -109,7 +110,7 @@ namespace Telligent.Services.SamlAuthenticationPlugin
                 };
                 group.Properties.Add(authnRequestSigned);
 
-                var wantAssertionsSigned = new Evolution.Extensibility.Configuration.Version1.Property
+                var wantAssertionsSigned = new Property
                 {
                     Id = "signassertions",
                     LabelText = "Want Assertions Signed",
@@ -120,7 +121,7 @@ namespace Telligent.Services.SamlAuthenticationPlugin
                 };
                 group.Properties.Add(wantAssertionsSigned);
 
-                var privateKey = new Evolution.Extensibility.Configuration.Version1.Property
+                var privateKey = new Property
                 {
                     Id = "privatekey",
                     LabelText = "Private Key to sign the metadata.",
@@ -131,7 +132,7 @@ namespace Telligent.Services.SamlAuthenticationPlugin
                 };
                 group.Properties.Add(privateKey);
 
-                var x509Cert = new Evolution.Extensibility.Configuration.Version1.Property
+                var x509Cert = new Property
                 {
                     Id = "x509cert",
                     LabelText = "X.509 cert to sign the metadata.",
@@ -142,7 +143,7 @@ namespace Telligent.Services.SamlAuthenticationPlugin
                 };
                 group.Properties.Add(x509Cert);
 
-                var orgName = new Evolution.Extensibility.Configuration.Version1.Property
+                var orgName = new Property
                 {
                     Id = "orgname",
                     LabelText = "Organization Name",
@@ -153,7 +154,7 @@ namespace Telligent.Services.SamlAuthenticationPlugin
                 };
                 group.Properties.Add(orgName);
 
-                var orgDisplayName = new Evolution.Extensibility.Configuration.Version1.Property
+                var orgDisplayName = new Property
                 {
                     Id = "orgdisplayname",
                     LabelText = "Organization DisplayName",
@@ -164,7 +165,7 @@ namespace Telligent.Services.SamlAuthenticationPlugin
                 };
                 group.Properties.Add(orgDisplayName);
 
-                var orgUrl = new Evolution.Extensibility.Configuration.Version1.Property
+                var orgUrl = new Property
                 {
                     Id = "orgurl",
                     LabelText = "Organizational URL",
@@ -175,7 +176,7 @@ namespace Telligent.Services.SamlAuthenticationPlugin
                 };
                 group.Properties.Add(orgUrl);
 
-                var techName = new Evolution.Extensibility.Configuration.Version1.Property
+                var techName = new Property
                 {
                     Id = "techname",
                     LabelText = "Technical Contact Name",
@@ -186,7 +187,7 @@ namespace Telligent.Services.SamlAuthenticationPlugin
                 };
                 group.Properties.Add(techName);
 
-                var techEmail = new Evolution.Extensibility.Configuration.Version1.Property
+                var techEmail = new Property
                 {
                     Id = "techemail",
                     LabelText = "Technical Contact Email",
@@ -197,7 +198,7 @@ namespace Telligent.Services.SamlAuthenticationPlugin
                 };
                 group.Properties.Add(techEmail);
 
-                var supportEmail = new Evolution.Extensibility.Configuration.Version1.Property
+                var supportEmail = new Property
                 {
                     Id = "supportemail",
                     LabelText = "Support Contact Email",

@@ -13,9 +13,9 @@ using System.Xml.Linq;
 using Telligent.Evolution.Extensibility;
 using Telligent.Evolution.Extensibility.Api.Version1;
 using Telligent.Evolution.Extensibility.Version1;
-using Telligent.Services.SamlAuthenticationPlugin.Components;
+using Verint.Services.SamlAuthenticationPlugin.Components;
 
-namespace Telligent.Services.SamlAuthenticationPlugin.Extensions
+namespace Verint.Services.SamlAuthenticationPlugin.Extensions
 {
     public class SpMetadataExtension
     {

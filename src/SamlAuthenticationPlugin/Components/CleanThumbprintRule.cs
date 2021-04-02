@@ -1,37 +1,18 @@
 ﻿using System;
 using System.Collections.Generic;
-using Telligent.DynamicConfiguration.Components;
+using System.IO;
+using Telligent.Evolution.Extensibility.Configuration.Version1;
 
-namespace Telligent.Services.SamlAuthenticationPlugin.Components
+namespace Verint.Services.SamlAuthenticationPlugin.Components
 {
     public class CleanThumbprintRule : IPropertyRule
     {
-        public void LoadConfiguration(PropertyRule rule, System.Xml.XmlNode node)
-        {
-
-        }
-
-        /// <summary>
-        /// Remove non printing characters such as byte order marks from certificate thumbprints
-        /// </summary>
-        /// <param name="property"></param>
-        /// <param name="data"></param>
-        public void ValueChanged(Property property, ConfigurationDataBase data)
-        {
-            if (property.DataType != PropertyType.String)
-                return;
-
-            var value = data.GetStringValue(property);
-            if (!string.IsNullOrEmpty(value))
-                data.SetStringValue(property, CleanThumbprint(value.Trim()));
-        }
-
         private string CleanThumbprint(string thumbprints)
         {
-            List<string> cleanedThumbprints = new List<string>();
+            var cleanedThumbprints = new List<string>();
             foreach (var thumbprint in thumbprints.Split(','))
             {
-                char[] arr = thumbprint.ToCharArray();
+                var arr = thumbprint.ToCharArray();
 
                 //faster than a regex
                 arr = Array.FindAll<char>(arr, (c => (char.IsLetterOrDigit(c))));
@@ -41,5 +22,23 @@ namespace Telligent.Services.SamlAuthenticationPlugin.Components
             return string.Join(",", cleanedThumbprints.ToArray());
         }
 
+        public void Initialize(){}
+
+        public string Name => "SAML Clean Thumbprint Rule";
+        public string Description => "Validates that the thumbprint contains valid characters.";
+        public void Render(TextWriter writer, IPropertyRuleRenderingOptions options)
+        {
+            
+        }
+
+        public void Execute(IPropertyRuleExecutionOptions options)
+        {
+            if (options.GetValue(options.Property.Id) is string value)
+                options.SetValue(options.Property.Id, CleanThumbprint(value.Trim()));
+        }
+
+        public string[] DataTypes => new[] {"string"};
+        public string RuleName => "cleanthumbprint";
+        public PropertyRuleOption[] Options => null;
     }
 }

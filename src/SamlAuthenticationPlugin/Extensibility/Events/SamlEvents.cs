@@ -1,8 +1,8 @@
 ﻿using PublicEntity = Telligent.Evolution.Extensibility.Api.Entities.Version1.User;
-using Telligent.Services.SamlAuthenticationPlugin.Components;
+using Verint.Services.SamlAuthenticationPlugin.Components;
 using Telligent.Evolution.Extensibility.Events.Version1;
 
-namespace Telligent.Services.SamlAuthenticationPlugin.Extensibility.Events
+namespace Verint.Services.SamlAuthenticationPlugin.Extensibility.Events
 {
     public class SamlEvents: EventsBase, ISamlEventExecutor
     {

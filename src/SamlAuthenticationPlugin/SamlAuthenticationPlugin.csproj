@@ -8,9 +8,9 @@
     <ProjectGuid>{C6179562-30DF-4C81-AB43-30712575B21C}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Telligent.Services.SamlAuthenticationPlugin</RootNamespace>
-    <AssemblyName>Telligent.Services.SamlAuthenticationPlugin</AssemblyName>
-    <TargetFrameworkVersion>v4.7</TargetFrameworkVersion>
+    <RootNamespace>Verint.Services.SamlAuthenticationPlugin</RootNamespace>
+    <AssemblyName>Verint.Services.SamlAuthenticationPlugin</AssemblyName>
+    <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <FileUpgradeFlags>
     </FileUpgradeFlags>
