@@ -200,10 +200,6 @@
     <Reference Include="System.IdentityModel">
       <RequiredTargetFramework>3.0</RequiredTargetFramework>
     </Reference>
-    <Reference Include="System.IdentityModel.Selectors">
-      <RequiredTargetFramework>3.0</RequiredTargetFramework>
-    </Reference>
-    <Reference Include="System.identitymodel.services" />
     <Reference Include="System.Net.Http.Formatting, Version=5.2.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <HintPath>..\packages\TelligentCommunity.12.0.0.15277\lib\net40\System.Net.Http.Formatting.dll</HintPath>
       <Private>False</Private>
@@ -439,7 +435,7 @@
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PostBuildEvent>xcopy /y /d  "$(ProjectDir)\bin\Debug\Telligent.Services.*.*" "C:\Dev\TIM\Communities\local.saml.com\Web\bin"</PostBuildEvent>
+    <PostBuildEvent>xcopy /y /d  "$(ProjectDir)\bin\Debug\Verint.Services.*.*" "C:\Dev\TIM\Communities\local.saml.com\Web\bin"</PostBuildEvent>
   </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

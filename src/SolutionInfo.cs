@@ -11,5 +11,5 @@ using System.Reflection;
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-[assembly: AssemblyVersion("12.0.0.15277")]
-[assembly: AssemblyFileVersion("12.0.0.15277")]
+[assembly: AssemblyVersion("11.1.0.14291")]
+[assembly: AssemblyFileVersion("11.1.0.14291")]
