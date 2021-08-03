@@ -118,7 +118,18 @@ namespace Verint.Services.SamlAuthenticationPlugin
             if (!samlTokenData.IsExistingUser()) throw new InvalidOperationException("The User Id must be greater than zero.");
 
             if (GetSamlTokenStoreData(samlTokenData.UserId) == null)
+            {
+                //extra check on ClientId, delete all records with this clientid (should be max 1 because of Unique Key Constraint)
+                var existingData = GetSamlTokenData(samlTokenData.NameId);
+                if (existingData != null)
+                {
+                    foreach (var existingRecord in existingData)
+                    {
+                        DeleteSamlTokenData(existingRecord.UserId);
+                    }
+                }
                 InsertSamlToken(samlTokenData);
+            }
             else
                 UpdateSamlToken(samlTokenData);
         }
