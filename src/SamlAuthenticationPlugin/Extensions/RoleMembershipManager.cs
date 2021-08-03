@@ -58,9 +58,8 @@ namespace Verint.Services.SamlAuthenticationPlugin.Extensions
         {
             var usersSamlTokenRoles = GetSamlTokenRoles(samlTokenData);
 
-            Apis.Get<IUsers>().RunAsUser("admin", () =>
+            Apis.Get<IUsers>().RunAsUser(AdminUserName, () =>
             {
-
                 CreateMissingRoles(usersSamlTokenRoles);
                 AddRemoveUserFromManagedRoles(user, usersSamlTokenRoles);
             });
@@ -150,6 +149,10 @@ namespace Verint.Services.SamlAuthenticationPlugin.Extensions
             get { return Configuration.GetString("RoleClaim"); }
         }
 
+        public string AdminUserName
+        {
+            get { return Configuration.GetString("AdminUserName"); }
+        }
 
         public bool IsConfigured
         {
@@ -202,6 +205,19 @@ namespace Verint.Services.SamlAuthenticationPlugin.Extensions
                 };
                 roleClaim.Rules.Add(new PropertyRule { Name = "trim" });
                 groups[0].Properties.Add(roleClaim);
+
+                var adminUserName = new Property
+                {
+                    Id = "AdminUserName",
+                    LabelText = "Administrator username",
+                    DataType = "String",
+                    OrderNumber = 3,
+                    DefaultValue = "admin",
+                    DescriptionText = "The admin username to use for elevation"
+                };
+                adminUserName.Rules.Add(new PropertyRule { Name = "trim" });
+                groups[0].Properties.Add(adminUserName);
+
 
                 return groups;
 
