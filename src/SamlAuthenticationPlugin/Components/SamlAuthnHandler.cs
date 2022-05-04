@@ -88,7 +88,7 @@ namespace Verint.Services.SamlAuthenticationPlugin.Components
                     HttpContext.Current.ApplicationInstance.CompleteRequest();
                     break;
 
-                case AuthnBinding.Redirect: //untested
+                case AuthnBinding.Redirect: 
                     
                     context.Response.Redirect(samlPlugin.IdpUrl + "?SAMLRequest=" + HttpUtility.UrlEncode(ZipStr(GetSamlAuthnBase64(requestId, samlPlugin.IdpUrl, issuerUrl))) + "&RelayState=" + HttpUtility.UrlEncode("/SamlLogin?ReturnUrl=" + returnUrl), false);
                     HttpContext.Current.ApplicationInstance.CompleteRequest();
