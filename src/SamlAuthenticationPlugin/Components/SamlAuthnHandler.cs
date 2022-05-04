@@ -15,7 +15,7 @@ namespace Verint.Services.SamlAuthenticationPlugin.Components
     public class SamlAuthnHandler : IHttpHandler
 
     {
-        private const string SamlRequestTemplate = "<samlp:AuthnRequest ID=\"{0}\" Version=\"2.0\" IssueInstant=\"{1}\" Destination=\"{2}\" Consent=\"urn:oasis:names:tc:SAML:2.0:consent:unspecified\" xmlns:samlp=\"urn:oasis:names:tc:SAML:2.0:protocol\"><saml:Issuer xmlns:saml=\"urn:oasis:names:tc:SAML:2.0:assertion\">{3}</saml:Issuer><samlp:NameIDPolicy AllowCreate=\"true\" /></samlp:AuthnRequest>";
+        private const string SamlRequestTemplate = "<samlp:AuthnRequest ID=\"{0}\" Version=\"2.0\" IssueInstant=\"{1}\" Destination=\"{2}\" Consent=\"urn:oasis:names:tc:SAML:2.0:consent:unspecified\" xmlns:samlp=\"urn:oasis:names:tc:SAML:2.0:protocol\" xmlns:saml=\"urn:oasis:names:tc:SAML:2.0:assertion\" AssertionConsumerServiceIndex=\"0\" AttributeConsumingServiceIndex=\"0\"><saml:Issuer xmlns:saml=\"urn:oasis:names:tc:SAML:2.0:assertion\">{3}</saml:Issuer><samlp:NameIDPolicy AllowCreate=\"true\" /></samlp:AuthnRequest>";
         //note old code had this in place of "Consent" ForceAuthn="false" IsPassive="false" ProtocolBinding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST" AssertionConsumerServiceURL="{url that accepts saml tokens}"
         private const string WsFederationSignInTemplate = "{0}?wa=wsignin1.0&wtrealm={1}&wreply={2}";
         private const string SamlHandlerContent = "<html><head><title>Working...</title></head><body><form method='POST' name='hiddenform' action='{0}'><input type='hidden' name='SAMLRequest' value='{1}' /><noscript><p>Script is disabled. Click Submit to continue.</p><input type='submit' value='Submit' /></noscript></form><script language='javascript'>window.setTimeout('document.forms[0].submit()', 0);</script></body></html>";
@@ -89,7 +89,8 @@ namespace Verint.Services.SamlAuthenticationPlugin.Components
                     break;
 
                 case AuthnBinding.Redirect: //untested
-                    context.Response.Redirect(samlPlugin.IdpUrl + "?SAMLRequest=" + HttpUtility.UrlEncode(System.Text.Encoding.Default.GetString(ZipStr(GetSamlAuthnBase64(requestId, samlPlugin.IdpUrl, issuerUrl)))) + "&RelayState=" + HttpUtility.UrlEncode("/SamlLogin?ReturnUrl=" + returnUrl), false);
+                    
+                    context.Response.Redirect(samlPlugin.IdpUrl + "?SAMLRequest=" + HttpUtility.UrlEncode(ZipStr(GetSamlAuthnBase64(requestId, samlPlugin.IdpUrl, issuerUrl))) + "&RelayState=" + HttpUtility.UrlEncode("/SamlLogin?ReturnUrl=" + returnUrl), false);
                     HttpContext.Current.ApplicationInstance.CompleteRequest();
                     break;
 
@@ -179,10 +180,11 @@ namespace Verint.Services.SamlAuthenticationPlugin.Components
             HttpContext.Current.ApplicationInstance.CompleteRequest();
         }
 
-        private string GetSamlAuthnBase64(string requestId, string _identityProviderUrl, string _issuerUrl, string thumbprint = null)
+        private byte[] GetSamlAuthnBase64(string requestId, string _identityProviderUrl, string _issuerUrl, string thumbprint = null)
         {
-            return System.Convert.ToBase64String(
-                System.Text.Encoding.UTF8.GetBytes(GetSamlAuthnXml(requestId, _identityProviderUrl, _issuerUrl, thumbprint)));
+            var samlXml = GetSamlAuthnXml(requestId, _identityProviderUrl, _issuerUrl, thumbprint);
+            var bytes = System.Text.Encoding.UTF8.GetBytes(samlXml);
+            return bytes;
         }
 
         private string ToBase64(string xml)
@@ -191,22 +193,20 @@ namespace Verint.Services.SamlAuthenticationPlugin.Components
                 System.Text.Encoding.UTF8.GetBytes(xml));
         }
 
-        public static byte[] ZipStr(String str)
+        public static string ZipStr(byte[] bytes)
         {
-            using (MemoryStream output = new MemoryStream())
+            string base64String;
+            using (var output = new MemoryStream())
             {
-                using (DeflateStream gzip =
+                using (var gzip =
                   new DeflateStream(output, CompressionMode.Compress))
                 {
-                    using (StreamWriter writer =
-                      new StreamWriter(gzip, System.Text.Encoding.UTF8))
-                    {
-                        writer.Write(str);
-                    }
+                    gzip.Write(bytes,0,bytes.Length);
                 }
-
-                return output.ToArray();
+                base64String = Convert.ToBase64String(output.ToArray());
             }
+
+            return base64String;
         }
 
         public static string UnZipStr(byte[] input)
