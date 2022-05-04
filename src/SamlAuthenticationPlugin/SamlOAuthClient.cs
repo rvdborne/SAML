@@ -751,7 +751,7 @@ namespace Verint.Services.SamlAuthenticationPlugin
                 if (samlTokenData == null)
                 {
                     apiExceptions.Log(new ArgumentException(
-                        "The SAML token was not found in the HttpContext.Current.Request, or could not be extracted.  Please ensure cookies are enabled and try again."));
+                        "The SAML token was not found in the HttpContext.Current.Request, or could not be extracted. Please ensure the db_SamlTempTokenData table exist and try again."));
 
                     ProcessReturnUrl();
                 }
