@@ -55,143 +55,7 @@
     <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="AdvancedIntellect.Ssl, Version=2.0.0.5, Culture=neutral, PublicKeyToken=bc571e8da1c1f543, processorArchitecture=MSIL">
-      <HintPath>..\packages\TelligentCommunity.12.0.0.15277\lib\net40\AdvancedIntellect.Ssl.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="aspNetEmail, Version=3.7.0.10, Culture=neutral, PublicKeyToken=bc571e8da1c1f543">
-      <HintPath>..\packages\TelligentCommunity.12.0.0.15277\lib\net40\aspNetEmail.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="aspNetIMAP, Version=3.0.0.9, Culture=neutral, PublicKeyToken=bc571e8da1c1f543">
-      <HintPath>..\packages\TelligentCommunity.12.0.0.15277\lib\net40\aspNetIMAP.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="aspNetMime, Version=3.0.0.9, Culture=neutral, PublicKeyToken=bc571e8da1c1f543">
-      <HintPath>..\packages\TelligentCommunity.12.0.0.15277\lib\net40\aspNetMime.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="aspNetPOP3, Version=3.0.0.9, Culture=neutral, PublicKeyToken=bc571e8da1c1f543">
-      <HintPath>..\packages\TelligentCommunity.12.0.0.15277\lib\net40\aspNetPOP3.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="Aspose.Cells, Version=20.4.0.0, Culture=neutral, PublicKeyToken=716fcc553a201e56, processorArchitecture=MSIL">
-      <HintPath>..\packages\TelligentCommunity.12.0.0.15277\lib\net40\Aspose.Cells.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="Aspose.PDF, Version=20.4.0.0, Culture=neutral, PublicKeyToken=f0262d67fe233d63, processorArchitecture=MSIL">
-      <HintPath>..\packages\TelligentCommunity.12.0.0.15277\lib\net40\Aspose.PDF.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="Aspose.Slides, Version=20.4.0.0, Culture=neutral, PublicKeyToken=716fcc553a201e56, processorArchitecture=MSIL">
-      <HintPath>..\packages\TelligentCommunity.12.0.0.15277\lib\net40\Aspose.Slides.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="Aspose.Words, Version=20.4.0.0, Culture=neutral, PublicKeyToken=716fcc553a201e56, processorArchitecture=MSIL">
-      <HintPath>..\packages\TelligentCommunity.12.0.0.15277\lib\net40\Aspose.Words.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="Common.Logging, Version=2.0.0.0, Culture=neutral, PublicKeyToken=af08829b84f0328e, processorArchitecture=MSIL">
-      <HintPath>..\packages\TelligentCommunity.12.0.0.15277\lib\net40\Common.Logging.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="Common.Logging.Log4Net, Version=2.0.0.0, Culture=neutral, PublicKeyToken=af08829b84f0328e, processorArchitecture=MSIL">
-      <HintPath>..\packages\TelligentCommunity.12.0.0.15277\lib\net40\Common.Logging.Log4Net.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="CommunityServer.Ldap, Version=0.1.12.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\TelligentCommunity.12.0.0.15277\lib\net40\CommunityServer.Ldap.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="DOAP, Version=1.0.1.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\TelligentCommunity.12.0.0.15277\lib\net40\DOAP.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="dotless.Core, Version=1.5.0.0, Culture=neutral, PublicKeyToken=96b446c9e63eae34, processorArchitecture=MSIL">
-      <HintPath>..\packages\TelligentCommunity.12.0.0.15277\lib\net40\dotless.Core.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="Jint, Version=2.11.58.24, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\TelligentCommunity.12.0.0.15277\lib\net40\Jint.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="log4net, Version=1.2.10.0, Culture=neutral, PublicKeyToken=1b44e1d426115821, processorArchitecture=MSIL">
-      <HintPath>..\packages\TelligentCommunity.12.0.0.15277\lib\net40\log4net.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="Microsoft.AspNet.SignalR.Core, Version=2.4.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
-      <HintPath>..\packages\TelligentCommunity.12.0.0.15277\lib\net40\Microsoft.AspNet.SignalR.Core.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="Microsoft.AspNet.SignalR.SystemWeb, Version=2.4.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
-      <HintPath>..\packages\TelligentCommunity.12.0.0.15277\lib\net40\Microsoft.AspNet.SignalR.SystemWeb.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="Microsoft.IdentityModel.Logging, Version=6.5.1.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
-      <HintPath>..\packages\TelligentCommunity.12.0.0.15277\lib\net40\Microsoft.IdentityModel.Logging.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="Microsoft.IdentityModel.Tokens, Version=6.5.1.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
-      <HintPath>..\packages\TelligentCommunity.12.0.0.15277\lib\net40\Microsoft.IdentityModel.Tokens.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="Microsoft.Owin, Version=2.1.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
-      <HintPath>..\packages\TelligentCommunity.12.0.0.15277\lib\net40\Microsoft.Owin.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="Microsoft.Owin.Host.SystemWeb, Version=2.1.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
-      <HintPath>..\packages\TelligentCommunity.12.0.0.15277\lib\net40\Microsoft.Owin.Host.SystemWeb.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="Microsoft.Owin.Security, Version=2.1.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
-      <HintPath>..\packages\TelligentCommunity.12.0.0.15277\lib\net40\Microsoft.Owin.Security.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="Microsoft.Web.Infrastructure, Version=1.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
-      <HintPath>..\packages\TelligentCommunity.12.0.0.15277\lib\net40\Microsoft.Web.Infrastructure.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="Newtonsoft.Json, Version=9.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
-      <HintPath>..\packages\TelligentCommunity.12.0.0.15277\lib\net40\Newtonsoft.Json.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="NineRays.Gears.IFilterHelper, Version=1.2.0.0, Culture=neutral, PublicKeyToken=8ac0c65091e2ef2d, processorArchitecture=MSIL">
-      <HintPath>..\packages\TelligentCommunity.12.0.0.15277\lib\net40\NineRays.Gears.IFilterHelper.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="Ninject, Version=3.2.0.0, Culture=neutral, PublicKeyToken=c7192dc5380945e7, processorArchitecture=MSIL">
-      <HintPath>..\packages\TelligentCommunity.12.0.0.15277\lib\net40\Ninject.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="NVelocity, Version=1.1.2.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\TelligentCommunity.12.0.0.15277\lib\net40\NVelocity.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="Owin, Version=1.0.0.0, Culture=neutral, PublicKeyToken=f0ebd12fd5e55cc5, processorArchitecture=MSIL">
-      <HintPath>..\packages\TelligentCommunity.12.0.0.15277\lib\net40\Owin.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="protobuf-net, Version=2.0.0.480, Culture=neutral, PublicKeyToken=257b51d87d2e4d67, processorArchitecture=MSIL">
-      <HintPath>..\packages\TelligentCommunity.12.0.0.15277\lib\net40\protobuf-net.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="RSS.Net, Version=0.86.20.60711, Culture=neutral, PublicKeyToken=6010a8daa049308d, processorArchitecture=MSIL">
-      <HintPath>..\packages\TelligentCommunity.12.0.0.15277\lib\net40\RSS.Net.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="Security.Cryptography, Version=1.6.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\TelligentCommunity.12.0.0.15277\lib\net40\Security.Cryptography.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="SimpleInjector, Version=2.3.0.0, Culture=neutral, PublicKeyToken=984cb50dea722e99, processorArchitecture=MSIL">
-      <HintPath>..\packages\TelligentCommunity.12.0.0.15277\lib\net40\SimpleInjector.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
     <Reference Include="System" />
-    <Reference Include="System.Collections.Immutable, Version=1.2.1.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
-      <HintPath>..\packages\TelligentCommunity.12.0.0.15277\lib\net40\System.Collections.Immutable.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
     <Reference Include="System.configuration" />
     <Reference Include="System.Core">
       <RequiredTargetFramework>3.5</RequiredTargetFramework>
@@ -200,10 +64,6 @@
     <Reference Include="System.IdentityModel">
       <RequiredTargetFramework>3.0</RequiredTargetFramework>
     </Reference>
-    <Reference Include="System.Net.Http.Formatting, Version=5.2.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
-      <HintPath>..\packages\TelligentCommunity.12.0.0.15277\lib\net40\System.Net.Http.Formatting.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
     <Reference Include="System.Runtime.Serialization">
       <RequiredTargetFramework>3.0</RequiredTargetFramework>
     </Reference>
@@ -211,10 +71,6 @@
     <Reference Include="System.ServiceModel" />
     <Reference Include="System.Web" />
     <Reference Include="System.Web.ApplicationServices" />
-    <Reference Include="System.Web.Routing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
-      <HintPath>..\packages\TelligentCommunity.12.0.0.15277\lib\net40\System.Web.Routing.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
     <Reference Include="System.Xml.Linq">
       <RequiredTargetFramework>3.5</RequiredTargetFramework>
     </Reference>
@@ -223,133 +79,125 @@
     </Reference>
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
-    <Reference Include="Telligent.Common, Version=0.1.39.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\TelligentCommunity.12.0.0.15277\lib\net40\Telligent.Common.dll</HintPath>
-      <Private>False</Private>
+    <Reference Include="Telligent.Common, Version=0.1.41.0, Culture=neutral, PublicKeyToken=null">
+      <HintPath>..\packages\TelligentCommunity.11.1.11.20244\lib\net40\Telligent.Common.dll</HintPath>
+      <Private>True</Private>
     </Reference>
-    <Reference Include="Telligent.DynamicConfiguration, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\TelligentCommunity.12.0.0.15277\lib\net40\Telligent.DynamicConfiguration.dll</HintPath>
-      <Private>False</Private>
+    <Reference Include="Telligent.DynamicConfiguration, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null">
+      <HintPath>..\packages\TelligentCommunity.11.1.11.20244\lib\net40\Telligent.DynamicConfiguration.dll</HintPath>
+      <Private>True</Private>
     </Reference>
-    <Reference Include="Telligent.Evolution.Api, Version=12.0.0.15277, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\TelligentCommunity.12.0.0.15277\lib\net40\Telligent.Evolution.Api.dll</HintPath>
-      <Private>False</Private>
+    <Reference Include="Telligent.Evolution.Api, Version=11.1.11.20244, Culture=neutral, PublicKeyToken=null">
+      <HintPath>..\packages\TelligentCommunity.11.1.11.20244\lib\net40\Telligent.Evolution.Api.dll</HintPath>
+      <Private>True</Private>
     </Reference>
-    <Reference Include="Telligent.Evolution.Articles, Version=12.0.0.15277, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\TelligentCommunity.12.0.0.15277\lib\net40\Telligent.Evolution.Articles.dll</HintPath>
-      <Private>False</Private>
+    <Reference Include="Telligent.Evolution.Blogs, Version=11.1.11.20244, Culture=neutral, PublicKeyToken=null">
+      <HintPath>..\packages\TelligentCommunity.11.1.11.20244\lib\net40\Telligent.Evolution.Blogs.dll</HintPath>
+      <Private>True</Private>
     </Reference>
-    <Reference Include="Telligent.Evolution.Blogs, Version=12.0.0.15277, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\TelligentCommunity.12.0.0.15277\lib\net40\Telligent.Evolution.Blogs.dll</HintPath>
-      <Private>False</Private>
+    <Reference Include="Telligent.Evolution.Calendar, Version=11.1.11.20244, Culture=neutral, PublicKeyToken=null">
+      <HintPath>..\packages\TelligentCommunity.11.1.11.20244\lib\net40\Telligent.Evolution.Calendar.dll</HintPath>
+      <Private>True</Private>
     </Reference>
-    <Reference Include="Telligent.Evolution.Calendar, Version=12.0.0.15277, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\TelligentCommunity.12.0.0.15277\lib\net40\Telligent.Evolution.Calendar.dll</HintPath>
-      <Private>False</Private>
+    <Reference Include="Telligent.Evolution.Calendar.LegacyWidgets, Version=11.1.11.20244, Culture=neutral, PublicKeyToken=null">
+      <HintPath>..\packages\TelligentCommunity.11.1.11.20244\lib\net40\Telligent.Evolution.Calendar.LegacyWidgets.dll</HintPath>
+      <Private>True</Private>
     </Reference>
-    <Reference Include="Telligent.Evolution.Calendar.LegacyWidgets, Version=12.0.0.15277, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\TelligentCommunity.12.0.0.15277\lib\net40\Telligent.Evolution.Calendar.LegacyWidgets.dll</HintPath>
-      <Private>False</Private>
+    <Reference Include="Telligent.Evolution.Components, Version=11.1.11.20244, Culture=neutral, PublicKeyToken=null">
+      <HintPath>..\packages\TelligentCommunity.11.1.11.20244\lib\net40\Telligent.Evolution.Components.dll</HintPath>
+      <Private>True</Private>
     </Reference>
-    <Reference Include="Telligent.Evolution.Components, Version=12.0.0.15277, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\TelligentCommunity.12.0.0.15277\lib\net40\Telligent.Evolution.Components.dll</HintPath>
-      <Private>False</Private>
+    <Reference Include="Telligent.Evolution.Controls, Version=11.1.11.20244, Culture=neutral, PublicKeyToken=null">
+      <HintPath>..\packages\TelligentCommunity.11.1.11.20244\lib\net40\Telligent.Evolution.Controls.dll</HintPath>
+      <Private>True</Private>
     </Reference>
-    <Reference Include="Telligent.Evolution.Controls, Version=12.0.0.15277, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\TelligentCommunity.12.0.0.15277\lib\net40\Telligent.Evolution.Controls.dll</HintPath>
-      <Private>False</Private>
+    <Reference Include="Telligent.Evolution.Core, Version=11.1.11.20244, Culture=neutral, PublicKeyToken=null">
+      <HintPath>..\packages\TelligentCommunity.11.1.11.20244\lib\net40\Telligent.Evolution.Core.dll</HintPath>
+      <Private>True</Private>
     </Reference>
-    <Reference Include="Telligent.Evolution.Core, Version=12.0.0.15277, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\TelligentCommunity.12.0.0.15277\lib\net40\Telligent.Evolution.Core.dll</HintPath>
-      <Private>False</Private>
+    <Reference Include="Telligent.Evolution.CrossCutting, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null">
+      <HintPath>..\packages\TelligentCommunity.11.1.11.20244\lib\net40\Telligent.Evolution.CrossCutting.dll</HintPath>
+      <Private>True</Private>
     </Reference>
-    <Reference Include="Telligent.Evolution.CrossCutting, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\TelligentCommunity.12.0.0.15277\lib\net40\Telligent.Evolution.CrossCutting.dll</HintPath>
-      <Private>False</Private>
+    <Reference Include="Telligent.Evolution.Discussions, Version=11.1.11.20244, Culture=neutral, PublicKeyToken=null">
+      <HintPath>..\packages\TelligentCommunity.11.1.11.20244\lib\net40\Telligent.Evolution.Discussions.dll</HintPath>
+      <Private>True</Private>
     </Reference>
-    <Reference Include="Telligent.Evolution.Discussions, Version=12.0.0.15277, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\TelligentCommunity.12.0.0.15277\lib\net40\Telligent.Evolution.Discussions.dll</HintPath>
-      <Private>False</Private>
+    <Reference Include="Telligent.Evolution.Extensions.Calendar, Version=11.1.11.20244, Culture=neutral, PublicKeyToken=null">
+      <HintPath>..\packages\TelligentCommunity.11.1.11.20244\lib\net40\Telligent.Evolution.Extensions.Calendar.dll</HintPath>
+      <Private>True</Private>
     </Reference>
-    <Reference Include="Telligent.Evolution.Extensions.Calendar, Version=12.0.0.15277, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\TelligentCommunity.12.0.0.15277\lib\net40\Telligent.Evolution.Extensions.Calendar.dll</HintPath>
-      <Private>False</Private>
+    <Reference Include="Telligent.Evolution.Extensions.Ideation, Version=11.1.11.20244, Culture=neutral, PublicKeyToken=null">
+      <HintPath>..\packages\TelligentCommunity.11.1.11.20244\lib\net40\Telligent.Evolution.Extensions.Ideation.dll</HintPath>
+      <Private>True</Private>
     </Reference>
-    <Reference Include="Telligent.Evolution.Extensions.Ideation, Version=12.0.0.15277, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\TelligentCommunity.12.0.0.15277\lib\net40\Telligent.Evolution.Extensions.Ideation.dll</HintPath>
-      <Private>False</Private>
+    <Reference Include="Telligent.Evolution.Forums, Version=11.1.11.20244, Culture=neutral, PublicKeyToken=null">
+      <HintPath>..\packages\TelligentCommunity.11.1.11.20244\lib\net40\Telligent.Evolution.Forums.dll</HintPath>
+      <Private>True</Private>
     </Reference>
-    <Reference Include="Telligent.Evolution.Forums, Version=12.0.0.15277, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\TelligentCommunity.12.0.0.15277\lib\net40\Telligent.Evolution.Forums.dll</HintPath>
-      <Private>False</Private>
+    <Reference Include="Telligent.Evolution.Ideation, Version=11.1.11.20244, Culture=neutral, PublicKeyToken=null">
+      <HintPath>..\packages\TelligentCommunity.11.1.11.20244\lib\net40\Telligent.Evolution.Ideation.dll</HintPath>
+      <Private>True</Private>
     </Reference>
-    <Reference Include="Telligent.Evolution.Ideation, Version=12.0.0.15277, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\TelligentCommunity.12.0.0.15277\lib\net40\Telligent.Evolution.Ideation.dll</HintPath>
-      <Private>False</Private>
+    <Reference Include="Telligent.Evolution.Ideation.LegacyWidgets, Version=11.1.11.20244, Culture=neutral, PublicKeyToken=null">
+      <HintPath>..\packages\TelligentCommunity.11.1.11.20244\lib\net40\Telligent.Evolution.Ideation.LegacyWidgets.dll</HintPath>
+      <Private>True</Private>
     </Reference>
-    <Reference Include="Telligent.Evolution.Ideation.LegacyWidgets, Version=12.0.0.15277, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\TelligentCommunity.12.0.0.15277\lib\net40\Telligent.Evolution.Ideation.LegacyWidgets.dll</HintPath>
-      <Private>False</Private>
+    <Reference Include="Telligent.Evolution.KnowledgeManagement, Version=11.1.11.20244, Culture=neutral, PublicKeyToken=null">
+      <HintPath>..\packages\TelligentCommunity.11.1.11.20244\lib\net40\Telligent.Evolution.KnowledgeManagement.dll</HintPath>
+      <Private>True</Private>
     </Reference>
-    <Reference Include="Telligent.Evolution.KnowledgeManagement, Version=12.0.0.15277, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\TelligentCommunity.12.0.0.15277\lib\net40\Telligent.Evolution.KnowledgeManagement.dll</HintPath>
-      <Private>False</Private>
+    <Reference Include="Telligent.Evolution.MediaGalleries, Version=11.1.11.20244, Culture=neutral, PublicKeyToken=null">
+      <HintPath>..\packages\TelligentCommunity.11.1.11.20244\lib\net40\Telligent.Evolution.MediaGalleries.dll</HintPath>
+      <Private>True</Private>
     </Reference>
-    <Reference Include="Telligent.Evolution.MediaGalleries, Version=12.0.0.15277, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\TelligentCommunity.12.0.0.15277\lib\net40\Telligent.Evolution.MediaGalleries.dll</HintPath>
-      <Private>False</Private>
+    <Reference Include="Telligent.Evolution.OAuthClients, Version=11.1.11.20244, Culture=neutral, PublicKeyToken=null">
+      <HintPath>..\packages\TelligentCommunity.11.1.11.20244\lib\net40\Telligent.Evolution.OAuthClients.dll</HintPath>
+      <Private>True</Private>
     </Reference>
-    <Reference Include="Telligent.Evolution.OAuthClients, Version=12.0.0.15277, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\TelligentCommunity.12.0.0.15277\lib\net40\Telligent.Evolution.OAuthClients.dll</HintPath>
-      <Private>False</Private>
+    <Reference Include="Telligent.Evolution.Platform, Version=11.1.11.20244, Culture=neutral, PublicKeyToken=null">
+      <HintPath>..\packages\TelligentCommunity.11.1.11.20244\lib\net40\Telligent.Evolution.Platform.dll</HintPath>
+      <Private>True</Private>
     </Reference>
-    <Reference Include="Telligent.Evolution.Platform, Version=12.0.0.15277, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\TelligentCommunity.12.0.0.15277\lib\net40\Telligent.Evolution.Platform.dll</HintPath>
-      <Private>False</Private>
+    <Reference Include="Telligent.Evolution.RegexLibrary, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null">
+      <HintPath>..\packages\TelligentCommunity.11.1.11.20244\lib\net40\Telligent.Evolution.RegexLibrary.dll</HintPath>
+      <Private>True</Private>
     </Reference>
-    <Reference Include="Telligent.Evolution.RegexLibrary, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\TelligentCommunity.12.0.0.15277\lib\net40\Telligent.Evolution.RegexLibrary.dll</HintPath>
-      <Private>False</Private>
+    <Reference Include="Telligent.Evolution.Rest, Version=11.1.11.20244, Culture=neutral, PublicKeyToken=null">
+      <HintPath>..\packages\TelligentCommunity.11.1.11.20244\lib\net40\Telligent.Evolution.Rest.dll</HintPath>
+      <Private>True</Private>
     </Reference>
-    <Reference Include="Telligent.Evolution.Rest, Version=12.0.0.15277, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\TelligentCommunity.12.0.0.15277\lib\net40\Telligent.Evolution.Rest.dll</HintPath>
-      <Private>False</Private>
+    <Reference Include="Telligent.Evolution.ScriptedContentFragments, Version=11.1.11.20244, Culture=neutral, PublicKeyToken=null">
+      <HintPath>..\packages\TelligentCommunity.11.1.11.20244\lib\net40\Telligent.Evolution.ScriptedContentFragments.dll</HintPath>
+      <Private>True</Private>
     </Reference>
-    <Reference Include="Telligent.Evolution.ScriptedContentFragments, Version=12.0.0.15277, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\TelligentCommunity.12.0.0.15277\lib\net40\Telligent.Evolution.ScriptedContentFragments.dll</HintPath>
-      <Private>False</Private>
+    <Reference Include="Telligent.Evolution.SecurityModules, Version=11.1.11.20244, Culture=neutral, PublicKeyToken=null">
+      <HintPath>..\packages\TelligentCommunity.11.1.11.20244\lib\net40\Telligent.Evolution.SecurityModules.dll</HintPath>
+      <Private>True</Private>
     </Reference>
-    <Reference Include="Telligent.Evolution.SecurityModules, Version=12.0.0.15277, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\TelligentCommunity.12.0.0.15277\lib\net40\Telligent.Evolution.SecurityModules.dll</HintPath>
-      <Private>False</Private>
+    <Reference Include="Telligent.Evolution.VelocityExtensions, Version=11.1.11.20244, Culture=neutral, PublicKeyToken=null">
+      <HintPath>..\packages\TelligentCommunity.11.1.11.20244\lib\net40\Telligent.Evolution.VelocityExtensions.dll</HintPath>
+      <Private>True</Private>
     </Reference>
-    <Reference Include="Telligent.Evolution.VelocityExtensions, Version=12.0.0.15277, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\TelligentCommunity.12.0.0.15277\lib\net40\Telligent.Evolution.VelocityExtensions.dll</HintPath>
-      <Private>False</Private>
+    <Reference Include="Telligent.Evolution.Web, Version=11.1.11.20244, Culture=neutral, PublicKeyToken=null">
+      <HintPath>..\packages\TelligentCommunity.11.1.11.20244\lib\net40\Telligent.Evolution.Web.dll</HintPath>
+      <Private>True</Private>
     </Reference>
-    <Reference Include="Telligent.Evolution.Web, Version=12.0.0.15277, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\TelligentCommunity.12.0.0.15277\lib\net40\Telligent.Evolution.Web.dll</HintPath>
-      <Private>False</Private>
+    <Reference Include="Telligent.Evolution.Wikis, Version=11.1.11.20244, Culture=neutral, PublicKeyToken=null">
+      <HintPath>..\packages\TelligentCommunity.11.1.11.20244\lib\net40\Telligent.Evolution.Wikis.dll</HintPath>
+      <Private>True</Private>
     </Reference>
-    <Reference Include="Telligent.Evolution.Wikis, Version=12.0.0.15277, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\TelligentCommunity.12.0.0.15277\lib\net40\Telligent.Evolution.Wikis.dll</HintPath>
-      <Private>False</Private>
+    <Reference Include="Telligent.Glow, Version=0.1.91.0, Culture=neutral, PublicKeyToken=null">
+      <HintPath>..\packages\TelligentCommunity.11.1.11.20244\lib\net40\Telligent.Glow.dll</HintPath>
+      <Private>True</Private>
     </Reference>
-    <Reference Include="Telligent.Glow, Version=0.1.156.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\TelligentCommunity.12.0.0.15277\lib\net40\Telligent.Glow.dll</HintPath>
-      <Private>False</Private>
+    <Reference Include="Telligent.MailGateway.Common, Version=1.3.2.1, Culture=neutral, PublicKeyToken=null">
+      <HintPath>..\packages\TelligentCommunity.11.1.11.20244\lib\net40\Telligent.MailGateway.Common.dll</HintPath>
+      <Private>True</Private>
     </Reference>
-    <Reference Include="Telligent.Jobs, Version=1.2.8.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\TelligentCommunity.12.0.0.15277\lib\net40\Telligent.Jobs.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="Telligent.MailGateway.Common, Version=1.3.2.1, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\TelligentCommunity.12.0.0.15277\lib\net40\Telligent.MailGateway.Common.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="Telligent.Reporting, Version=12.0.0.15277, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\TelligentCommunity.12.0.0.15277\lib\net40\Telligent.Reporting.dll</HintPath>
-      <Private>False</Private>
+    <Reference Include="Telligent.Reporting, Version=11.1.11.20244, Culture=neutral, PublicKeyToken=null">
+      <HintPath>..\packages\TelligentCommunity.11.1.11.20244\lib\net40\Telligent.Reporting.dll</HintPath>
+      <Private>True</Private>
     </Reference>
   </ItemGroup>
   <ItemGroup>
