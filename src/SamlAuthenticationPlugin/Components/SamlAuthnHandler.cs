@@ -151,12 +151,13 @@ namespace Verint.Services.SamlAuthenticationPlugin.Components
 
         private string GetSamlAuthnXml(string requestId, string _identityProviderUrl, string _issuerUrl, string thumbprint = null)
         {
+            var currentDateUtc = DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Utc);
             var authNXml = string.Format(
-                    SamlRequestTemplate,
-                    requestId,
-                    DateTime.Now.ToString("yyyy-MM-ddTHH:mm:ss"), //DateTime.UtcNow.ToString("yyyy-MM-ddTHH:MM:ss.fffZ"),
-                    _identityProviderUrl,
-                    _issuerUrl);
+                SamlRequestTemplate,
+                requestId,
+                currentDateUtc.ToString("o"),//DateTime.Now.ToString("yyyy-MM-ddTHH:mm:ss"), //DateTime.UtcNow.ToString("yyyy-MM-ddTHH:MM:ss.fffZ"),
+                _identityProviderUrl,
+                _issuerUrl);
 
             if(!string.IsNullOrEmpty(thumbprint))
             {
